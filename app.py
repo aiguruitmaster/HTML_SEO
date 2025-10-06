@@ -15,13 +15,11 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-# Жёстко прячем сайдбар/бургер/верхнее меню
+# Жёстко прячем сайдбар/бургер/верхнюю плашку
 st.markdown(
     """
     <style>
-      [data-testid="stSidebar"],
-      [data-testid="collapsedControl"],
-      header { display: none !important; }
+      [data-testid="stSidebar"], [data-testid="collapsedControl"], header { display: none !important; }
       .block-container { padding-top: 2rem; }
     </style>
     """,
@@ -42,33 +40,29 @@ BASE_PROMPT = st.secrets.get("HTML_PROMPT", "")
 # Жёсткие настройки (можно переопределить переменными окружения)
 MODEL = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-5")
 MAX_OUTPUT_TOKENS = int(os.getenv("HTML_MAX_OUTPUT_TOKENS", "4096"))
-TEMPERATURE = float(os.getenv("HTML_TEMPERATURE", "0.15"))
 PREVIEW_HEIGHT = int(os.getenv("HTML_PREVIEW_HEIGHT", "1400"))
-MAX_RAW_CHARS = int(os.getenv("HTML_MAX_RAW_CHARS", "200000"))  # защита от чрезмерно больших вставок
-
+MAX_RAW_CHARS = int(os.getenv("HTML_MAX_RAW_CHARS", "200000"))  # мягкий лимит на размер вставки
 PLACEHOLDER = "Тут должен быть текст который вставил юзер"
 
 # =====================
 # Helpers
 # =====================
 def build_prompt(raw_text: str) -> str:
-    """Подставить пользовательский текст в секцию [RAW CONTENT]."""
     if PLACEHOLDER in BASE_PROMPT:
         return BASE_PROMPT.replace(PLACEHOLDER, raw_text)
     return f"{BASE_PROMPT}\n\n[RAW CONTENT]\n{raw_text}\n"
 
 def call_openai(final_prompt: str) -> str:
     client = OpenAI(api_key=OPENAI_KEY)
+    # Важно: без temperature, т.к. модель его не принимает
     resp = client.responses.create(
         model=MODEL,
         input=final_prompt,
         max_output_tokens=MAX_OUTPUT_TOKENS,
-        temperature=TEMPERATURE,
     )
     return resp.output_text
 
 def extract_markup(text: str) -> str:
-    """Оставляем только <div class="markup-seo-page">…</div> если модель болтнула лишнее."""
     trimmed = text.strip()
     if trimmed.startswith("<") and trimmed.endswith(">") and 'class="markup-seo-page"' in trimmed:
         return trimmed
@@ -80,15 +74,14 @@ def validate_markup(html_text: str) -> dict:
 
     if not (t.startswith("<") and t.endswith(">")):
         issues.append("Ответ не начинается с '<' или/и не заканчивается '>'")
-
     if 'class="markup-seo-page"' not in t:
         issues.append('Не найден <div class="markup-seo-page">')
 
-    if (a := len(re.findall(r"<a\b", t, re.I))) != 7:
-        issues.append(f"Количество <a>: {a} (ожидалось 7)")
+    a = len(re.findall(r"<a\b", t, re.I))
+    if a != 7: issues.append(f"Количество <a>: {a} (ожидалось 7)")
 
-    if (e := len(re.findall(r"<em\b", t, re.I))) != 1:
-        issues.append(f"Количество <em>: {e} (ожидалось 1)")
+    e = len(re.findall(r"<em\b", t, re.I))
+    if e != 1: issues.append(f"Количество <em>: {e} (ожидалось 1)")
 
     tables = re.findall(r"<table[\s\S]*?</table>", t, re.I)
     if len(tables) != 3:
@@ -99,8 +92,8 @@ def validate_markup(html_text: str) -> dict:
             if rows != need:
                 issues.append(f"Таблица #{i+1}: {rows} (ожидалось {need})")
 
-    if (faq := len(re.findall(r"<label\b[^>]*faq-accordion__item", t, re.I))) != 5:
-        issues.append(f"FAQ блоки: {faq} (ожидалось 5)")
+    faq = len(re.findall(r"<label\b[^>]*faq-accordion__item", t, re.I))
+    if faq != 5: issues.append(f"FAQ блоки: {faq} (ожидалось 5)")
 
     return {"ok": not issues, "issues": issues, "length": len(t)}
 
@@ -112,7 +105,7 @@ st.caption("Вставьте исходный текст → модель вер
 
 raw = st.text_area(
     "Исходный текст (будет подставлен в [RAW CONTENT])",
-    height=280,  # <— фикс: используем height вместо min_height
+    height=280,  # фикс вместо min_height
     placeholder="Вставьте ваш контент здесь…",
 )
 
@@ -126,7 +119,7 @@ if clear_btn:
     st.session_state.pop("generated_html", None)
     st.experimental_rerun()
 
-# Предусловия
+# Проверки секретов
 if not OPENAI_KEY:
     st.error("Не найден OPENAI_API_KEY в secrets.")
 if not BASE_PROMPT:
@@ -141,7 +134,6 @@ if generate:
         if len(text) > MAX_RAW_CHARS:
             text = text[:MAX_RAW_CHARS] + "\n… [обрезано для лимита запроса]"
         prompt = build_prompt(text)
-
         with st.spinner("Генерация…"):
             try:
                 html_block = call_openai(prompt)
@@ -154,7 +146,6 @@ if generate:
 # Вывод
 if html := st.session_state.get("generated_html"):
     st.subheader("Результат")
-
     report = validate_markup(html)
     if report["ok"]:
         st.success("Проверки пройдены ✓")
@@ -169,7 +160,7 @@ if html := st.session_state.get("generated_html"):
     st.divider()
     st.subheader("Предпросмотр")
     if hasattr(st, "html"):
-        st.html(html)  # Streamlit 1.39+
+        st.html(html)
     else:
         components.html(html, height=PREVIEW_HEIGHT, scrolling=True)
 
