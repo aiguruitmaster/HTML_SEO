@@ -1,4 +1,3 @@
-# app.py
 import os
 import re
 from datetime import datetime
@@ -16,8 +15,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-
-# Прячем левое меню/бургер/хедер
+# Жёстко прячем левое меню/бургер/хедер
 st.markdown(
     """
     <style>
@@ -33,7 +31,7 @@ st.markdown(
 # =====================
 # В .streamlit/secrets.toml должны быть:
 # OPENAI_API_KEY = "sk-..."
-# HTML_PROMPT = """
+# HTML_PROMPT   = """
 #   ВАШ ПОЛНЫЙ ПРОМПТ (с [RAW CONTENT] и TARGET HTML TEMPLATE)
 # """
 OPENAI_KEY = st.secrets.get("OPENAI_API_KEY", "")
@@ -49,18 +47,6 @@ PLACEHOLDER = "Тут должен быть текст который встав
 # =====================
 # Helpers
 # =====================
-def safe_rerun():
-    """Ререндер, совместимый с разными версиями Streamlit."""
-    try:
-        if hasattr(st, "rerun"):
-            st.rerun()
-        elif hasattr(st, "experimental_rerun"):
-            st.experimental_rerun()
-    except Exception:
-        # На очень старых версиях просто остановим исполнение —
-        # состояние уже сброшено и страница перерисуется при следующем действии.
-        st.stop()
-
 def build_prompt(raw_text: str) -> str:
     """Подставить пользовательский текст в секцию [RAW CONTENT]."""
     if PLACEHOLDER in BASE_PROMPT:
@@ -69,6 +55,7 @@ def build_prompt(raw_text: str) -> str:
 
 def call_openai(final_prompt: str) -> str:
     client = OpenAI(api_key=OPENAI_KEY)
+    # Без temperature — у некоторых моделей параметр не поддерживается
     resp = client.responses.create(
         model=MODEL,
         input=final_prompt,
@@ -118,15 +105,8 @@ def validate_markup(html_text: str) -> dict:
 st.title("🧩 HTML Transformer — Streamlit + OpenAI Responses API")
 st.caption("Вставьте исходный текст → модель вернёт один HTML-блок по вашему шаблону. Настройки захардкожены.")
 
-# инициализируем ключи состояния, чтобы «Очистить» корректно работала с первого раза
-if "raw_text" not in st.session_state:
-    st.session_state["raw_text"] = ""
-if "generated_html" not in st.session_state:
-    st.session_state["generated_html"] = None
-
 raw = st.text_area(
     "Исходный текст (будет подставлен в [RAW CONTENT])",
-    key="raw_text",
     height=280,  # фикс вместо min_height
     placeholder="Вставьте ваш контент здесь…",
 )
@@ -138,10 +118,10 @@ with col2:
     clear_btn = st.button("🧹 Очистить", use_container_width=True)
 
 if clear_btn:
-    # Полная очистка состояния и поля ввода
-    st.session_state["raw_text"] = ""
-    st.session_state["generated_html"] = None
-    safe_rerun()
+    st.session_state.pop("generated_html", None)
+    # Современная перерисовка (без experimental_rerun)
+    if hasattr(st, "rerun"):
+        st.rerun()
 
 # Проверки секретов
 if not OPENAI_KEY:
@@ -151,15 +131,10 @@ if not BASE_PROMPT:
 
 # Генерация
 if generate:
-    if not OPENAI_KEY:
-        st.stop()
-    if not BASE_PROMPT:
-        st.stop()
-
-    text = (st.session_state.get("raw_text") or "").strip()
-    if not text:
+    if not raw or not raw.strip():
         st.error("Введите текст для генерации.")
     else:
+        text = raw.strip()
         if len(text) > MAX_RAW_CHARS:
             text = text[:MAX_RAW_CHARS] + "\n… [обрезано для лимита запроса]"
         prompt = build_prompt(text)
@@ -172,11 +147,9 @@ if generate:
                 st.exception(e)
                 st.stop()
             st.session_state["generated_html"] = html_block
-        safe_rerun()
 
 # Вывод
-html = st.session_state.get("generated_html")
-if html:
+if html := st.session_state.get("generated_html"):
     st.subheader("Результат")
     report = validate_markup(html)
     if report["ok"]:
