@@ -15,7 +15,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-# Жёстко прячем сайдбар/бургер/верхнюю плашку
+# Жёстко прячем левое меню/бургер/хедер
 st.markdown(
     """
     <style>
@@ -29,7 +29,7 @@ st.markdown(
 # =====================
 # Secrets & constants
 # =====================
-# В .streamlit/secrets.toml:
+# В .streamlit/secrets.toml должны быть:
 # OPENAI_API_KEY = "sk-..."
 # HTML_PROMPT   = """
 #   ВАШ ПОЛНЫЙ ПРОМПТ (с [RAW CONTENT] и TARGET HTML TEMPLATE)
@@ -37,24 +37,25 @@ st.markdown(
 OPENAI_KEY = st.secrets.get("OPENAI_API_KEY", "")
 BASE_PROMPT = st.secrets.get("HTML_PROMPT", "")
 
-# Жёсткие настройки (можно переопределить переменными окружения)
+# Жёсткие настройки (можно переопределить env-переменными)
 MODEL = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-5")
 MAX_OUTPUT_TOKENS = int(os.getenv("HTML_MAX_OUTPUT_TOKENS", "4096"))
 PREVIEW_HEIGHT = int(os.getenv("HTML_PREVIEW_HEIGHT", "1400"))
-MAX_RAW_CHARS = int(os.getenv("HTML_MAX_RAW_CHARS", "200000"))  # мягкий лимит на размер вставки
+MAX_RAW_CHARS = int(os.getenv("HTML_MAX_RAW_CHARS", "200000"))  # мягкий лимит размера вставки
 PLACEHOLDER = "Тут должен быть текст который вставил юзер"
 
 # =====================
 # Helpers
 # =====================
 def build_prompt(raw_text: str) -> str:
+    """Подставить пользовательский текст в секцию [RAW CONTENT]."""
     if PLACEHOLDER in BASE_PROMPT:
         return BASE_PROMPT.replace(PLACEHOLDER, raw_text)
     return f"{BASE_PROMPT}\n\n[RAW CONTENT]\n{raw_text}\n"
 
 def call_openai(final_prompt: str) -> str:
     client = OpenAI(api_key=OPENAI_KEY)
-    # Важно: без temperature, т.к. модель его не принимает
+    # Без temperature — у некоторых моделей параметр не поддерживается
     resp = client.responses.create(
         model=MODEL,
         input=final_prompt,
@@ -63,6 +64,7 @@ def call_openai(final_prompt: str) -> str:
     return resp.output_text
 
 def extract_markup(text: str) -> str:
+    """Оставляем только <div class="markup-seo-page">…</div>, если модель болтнула лишнее."""
     trimmed = text.strip()
     if trimmed.startswith("<") and trimmed.endswith(">") and 'class="markup-seo-page"' in trimmed:
         return trimmed
@@ -117,7 +119,9 @@ with col2:
 
 if clear_btn:
     st.session_state.pop("generated_html", None)
-    st.experimental_rerun()
+    # Современная перерисовка (без experimental_rerun)
+    if hasattr(st, "rerun"):
+        st.rerun()
 
 # Проверки секретов
 if not OPENAI_KEY:
@@ -134,6 +138,7 @@ if generate:
         if len(text) > MAX_RAW_CHARS:
             text = text[:MAX_RAW_CHARS] + "\n… [обрезано для лимита запроса]"
         prompt = build_prompt(text)
+
         with st.spinner("Генерация…"):
             try:
                 html_block = call_openai(prompt)
@@ -160,7 +165,7 @@ if html := st.session_state.get("generated_html"):
     st.divider()
     st.subheader("Предпросмотр")
     if hasattr(st, "html"):
-        st.html(html)
+        st.html(html)  # Streamlit 1.39+
     else:
         components.html(html, height=PREVIEW_HEIGHT, scrolling=True)
 
