@@ -23,7 +23,7 @@ st.markdown("""
 OPENAI_KEY  = st.secrets.get("OPENAI_API_KEY", "")
 BASE_PROMPT = st.secrets.get("HTML_PROMPT", "")  # ← здесь ДОЛЖЕН быть ваш строгий промпт c TARGET HTML TEMPLATE
 
-MODEL          = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-4o-mini")  # можно переопределить переменной окружения
+MODEL          = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-5")  # можно переопределить переменной окружения
 PREVIEW_HEIGHT = int(os.getenv("HTML_PREVIEW_HEIGHT", "1200"))
 PLACEHOLDER    = "Тут должен быть текст который вставил юзер"
 
