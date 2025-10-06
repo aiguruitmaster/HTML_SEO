@@ -15,7 +15,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-# Прячем левое меню/бургер/хедер
 st.markdown(
     """
     <style>
@@ -35,8 +34,8 @@ st.markdown(
 # HTML_PROMPT   = """
 #   Ваш полный промпт (с [RAW CONTENT] и TARGET HTML TEMPLATE)
 # """
-OPENAI_KEY   = st.secrets.get("OPENAI_API_KEY", "")
-BASE_PROMPT  = st.secrets.get("HTML_PROMPT", "")
+OPENAI_KEY  = st.secrets.get("OPENAI_API_KEY", "")
+BASE_PROMPT = st.secrets.get("HTML_PROMPT", "")
 
 MODEL             = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-5")
 MAX_OUTPUT_TOKENS = int(os.getenv("HTML_MAX_OUTPUT_TOKENS", "4096"))
@@ -54,7 +53,7 @@ def build_prompt(raw_text: str) -> str:
 
 def call_openai(final_prompt: str) -> str:
     client = OpenAI(api_key=OPENAI_KEY)
-    # Важно: без temperature — некоторые модели его не принимают
+    # без temperature — некоторые модели его не принимают
     resp = client.responses.create(
         model=MODEL,
         input=final_prompt,
@@ -63,12 +62,12 @@ def call_openai(final_prompt: str) -> str:
     return resp.output_text
 
 def extract_markup(text: str) -> str:
-    """Вырезаем ровно один блок <div class="markup-seo-page">…</div>."""
-    trimmed = text.strip()
-    if trimmed.startswith("<") and trimmed.endswith(">") and 'class="markup-seo-page"' in trimmed:
-        return trimmed
-    m = re.search(r'<div\s+class="markup-seo-page"[\s\S]*?</div>', trimmed, re.I)
-    return m.group(0) if m else trimmed
+    """Вырезаем ровно один блок <div class="markup-seo-page">…</div> на случай лишнего текста."""
+    t = text.strip()
+    if t.startswith("<") and t.endswith(">") and 'class="markup-seo-page"' in t:
+        return t
+    m = re.search(r'<div\s+class="markup-seo-page"[\s\S]*?</div>', t, re.I)
+    return m.group(0) if m else t
 
 def validate_markup(html_text: str) -> dict:
     issues, t = [], html_text.strip()
@@ -79,7 +78,6 @@ def validate_markup(html_text: str) -> dict:
 
     a = len(re.findall(r"<a\b", t, re.I))
     if a != 7: issues.append(f"Количество <a>: {a} (ожидалось 7)")
-
     e = len(re.findall(r"<em\b", t, re.I))
     if e != 1: issues.append(f"Количество <em>: {e} (ожидалось 1)")
 
@@ -97,14 +95,14 @@ def validate_markup(html_text: str) -> dict:
     return {"ok": not issues, "issues": issues, "length": len(t)}
 
 # =====================
-# UI (без сайдбара)
+# UI
 # =====================
 st.title("🧩 HTML Transformer — Streamlit + OpenAI Responses API")
 st.caption("Вставьте исходный текст → модель вернёт один HTML-блок по вашему шаблону. Настройки захардкожены.")
 
 raw = st.text_area(
     "Исходный текст (будет подставлен в [RAW CONTENT])",
-    height=280,
+    height=280,  # ВАЖНО: height, не min_height
     placeholder="Вставьте ваш контент здесь…",
 )
 
@@ -119,7 +117,7 @@ if clear_btn:
     if hasattr(st, "rerun"):
         st.rerun()
 
-# Секреты настроены?
+# Проверки секретов
 if not OPENAI_KEY:
     st.error("Не найден OPENAI_API_KEY в secrets.")
 if not BASE_PROMPT:
@@ -146,7 +144,6 @@ if generate:
 # Вывод
 if html := st.session_state.get("generated_html"):
     st.subheader("Результат")
-
     report = validate_markup(html)
     if report["ok"]:
         st.success("Проверки пройдены ✓")
@@ -155,11 +152,11 @@ if html := st.session_state.get("generated_html"):
         for item in report["issues"]:
             st.write("• ", item)
 
-    # Скачать HTML
+    # СКАЧАТЬ
     fname = f"markup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
     st.download_button("💾 Скачать HTML", html, fname, "text/html", use_container_width=True)
 
-    # Предпросмотр
+    # ПРЕДПРОСМОТР
     st.divider()
     st.subheader("Предпросмотр")
     if hasattr(st, "html"):
