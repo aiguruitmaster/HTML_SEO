@@ -7,7 +7,7 @@ import streamlit.components.v1 as components
 from openai import OpenAI
 
 # =====================
-# Page config + no sidebar
+# Страница (без сайдбара)
 # =====================
 st.set_page_config(
     page_title="HTML Transformer (GPT-5)",
@@ -15,7 +15,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-# Скрываем левый сайдбар/бургер/хедер
+# Прячем левое меню/бургер/хедер
 st.markdown(
     """
     <style>
@@ -28,35 +28,33 @@ st.markdown(
 )
 
 # =====================
-# Secrets & constants
+# Секреты и жёсткие настройки
 # =====================
-# В .streamlit/secrets.toml должны быть:
+# В .streamlit/secrets.toml:
 # OPENAI_API_KEY = "sk-..."
 # HTML_PROMPT   = """
-#   ВАШ ПОЛНЫЙ ПРОМПТ (с [RAW CONTENT] и TARGET HTML TEMPLATE)
+#   Ваш полный промпт (с [RAW CONTENT] и TARGET HTML TEMPLATE)
 # """
-OPENAI_KEY = st.secrets.get("OPENAI_API_KEY", "")
-BASE_PROMPT = st.secrets.get("HTML_PROMPT", "")
+OPENAI_KEY   = st.secrets.get("OPENAI_API_KEY", "")
+BASE_PROMPT  = st.secrets.get("HTML_PROMPT", "")
 
-# Жёсткие настройки (можно переопределить env-переменными)
-MODEL = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-5")
+MODEL             = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-5")
 MAX_OUTPUT_TOKENS = int(os.getenv("HTML_MAX_OUTPUT_TOKENS", "4096"))
-PREVIEW_HEIGHT = int(os.getenv("HTML_PREVIEW_HEIGHT", "1400"))
-MAX_RAW_CHARS = int(os.getenv("HTML_MAX_RAW_CHARS", "200000"))  # мягкий лимит
-PLACEHOLDER = "Тут должен быть текст который вставил юзер"
+PREVIEW_HEIGHT    = int(os.getenv("HTML_PREVIEW_HEIGHT", "1400"))
+MAX_RAW_CHARS     = int(os.getenv("HTML_MAX_RAW_CHARS", "200000"))
+PLACEHOLDER       = "Тут должен быть текст который вставил юзер"
 
 # =====================
-# Helpers
+# Хелперы
 # =====================
 def build_prompt(raw_text: str) -> str:
-    """Подставить пользовательский текст в секцию [RAW CONTENT]."""
     if PLACEHOLDER in BASE_PROMPT:
         return BASE_PROMPT.replace(PLACEHOLDER, raw_text)
     return f"{BASE_PROMPT}\n\n[RAW CONTENT]\n{raw_text}\n"
 
 def call_openai(final_prompt: str) -> str:
     client = OpenAI(api_key=OPENAI_KEY)
-    # Без temperature — некоторые модели его не принимают
+    # Важно: без temperature — некоторые модели его не принимают
     resp = client.responses.create(
         model=MODEL,
         input=final_prompt,
@@ -65,7 +63,7 @@ def call_openai(final_prompt: str) -> str:
     return resp.output_text
 
 def extract_markup(text: str) -> str:
-    """Оставляем только <div class="markup-seo-page">…</div>, если модель вернула лишнее."""
+    """Вырезаем ровно один блок <div class="markup-seo-page">…</div>."""
     trimmed = text.strip()
     if trimmed.startswith("<") and trimmed.endswith(">") and 'class="markup-seo-page"' in trimmed:
         return trimmed
@@ -74,7 +72,6 @@ def extract_markup(text: str) -> str:
 
 def validate_markup(html_text: str) -> dict:
     issues, t = [], html_text.strip()
-
     if not (t.startswith("<") and t.endswith(">")):
         issues.append("Ответ не начинается с '<' или/и не заканчивается '>'")
     if 'class="markup-seo-page"' not in t:
@@ -97,7 +94,6 @@ def validate_markup(html_text: str) -> dict:
 
     faq = len(re.findall(r"<label\b[^>]*faq-accordion__item", t, re.I))
     if faq != 5: issues.append(f"FAQ блоки: {faq} (ожидалось 5)")
-
     return {"ok": not issues, "issues": issues, "length": len(t)}
 
 # =====================
@@ -108,7 +104,7 @@ st.caption("Вставьте исходный текст → модель вер
 
 raw = st.text_area(
     "Исходный текст (будет подставлен в [RAW CONTENT])",
-    height=280,  # фикс вместо min_height
+    height=280,
     placeholder="Вставьте ваш контент здесь…",
 )
 
@@ -123,7 +119,7 @@ if clear_btn:
     if hasattr(st, "rerun"):
         st.rerun()
 
-# Проверки секретов
+# Секреты настроены?
 if not OPENAI_KEY:
     st.error("Не найден OPENAI_API_KEY в secrets.")
 if not BASE_PROMPT:
@@ -138,7 +134,6 @@ if generate:
         if len(text) > MAX_RAW_CHARS:
             text = text[:MAX_RAW_CHARS] + "\n… [обрезано для лимита запроса]"
         prompt = build_prompt(text)
-
         with st.spinner("Генерация…"):
             try:
                 html_block = call_openai(prompt)
@@ -160,15 +155,9 @@ if html := st.session_state.get("generated_html"):
         for item in report["issues"]:
             st.write("• ", item)
 
-    # Кнопка скачивания ГЕНЕРИРУЕМОГО HTML
+    # Скачать HTML
     fname = f"markup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-    st.download_button(
-        label="💾 Скачать HTML",
-        data=html,
-        file_name=fname,
-        mime="text/html",
-        use_container_width=True,
-    )
+    st.download_button("💾 Скачать HTML", html, fname, "text/html", use_container_width=True)
 
     # Предпросмотр
     st.divider()
@@ -181,4 +170,4 @@ if html := st.session_state.get("generated_html"):
     with st.expander("Показать чистый HTML"):
         st.code(html, language="html")
 
-st.caption("ℹ️ После нажатия «Сгенерировать HTML» ниже появится блок «Результат»: предпросмотр и кнопка «Скачать HTML».")
+st.caption("ℹ️ После «Сгенерировать HTML» ниже появится «Результат», предпросмотр и кнопка «Скачать HTML».")
