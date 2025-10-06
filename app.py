@@ -15,12 +15,13 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-# Жёстко прячем левое меню/бургер/хедер
+# Скрываем левый сайдбар/бургер/хедер
 st.markdown(
     """
     <style>
       [data-testid="stSidebar"], [data-testid="collapsedControl"], header { display: none !important; }
       .block-container { padding-top: 2rem; }
+      .stButton>button { height: 48px; font-weight: 600; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -41,7 +42,7 @@ BASE_PROMPT = st.secrets.get("HTML_PROMPT", "")
 MODEL = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-5")
 MAX_OUTPUT_TOKENS = int(os.getenv("HTML_MAX_OUTPUT_TOKENS", "4096"))
 PREVIEW_HEIGHT = int(os.getenv("HTML_PREVIEW_HEIGHT", "1400"))
-MAX_RAW_CHARS = int(os.getenv("HTML_MAX_RAW_CHARS", "200000"))  # мягкий лимит размера вставки
+MAX_RAW_CHARS = int(os.getenv("HTML_MAX_RAW_CHARS", "200000"))  # мягкий лимит
 PLACEHOLDER = "Тут должен быть текст который вставил юзер"
 
 # =====================
@@ -55,7 +56,7 @@ def build_prompt(raw_text: str) -> str:
 
 def call_openai(final_prompt: str) -> str:
     client = OpenAI(api_key=OPENAI_KEY)
-    # Без temperature — у некоторых моделей параметр не поддерживается
+    # Без temperature — некоторые модели его не принимают
     resp = client.responses.create(
         model=MODEL,
         input=final_prompt,
@@ -64,7 +65,7 @@ def call_openai(final_prompt: str) -> str:
     return resp.output_text
 
 def extract_markup(text: str) -> str:
-    """Оставляем только <div class="markup-seo-page">…</div>, если модель болтнула лишнее."""
+    """Оставляем только <div class="markup-seo-page">…</div>, если модель вернула лишнее."""
     trimmed = text.strip()
     if trimmed.startswith("<") and trimmed.endswith(">") and 'class="markup-seo-page"' in trimmed:
         return trimmed
@@ -119,7 +120,6 @@ with col2:
 
 if clear_btn:
     st.session_state.pop("generated_html", None)
-    # Современная перерисовка (без experimental_rerun)
     if hasattr(st, "rerun"):
         st.rerun()
 
@@ -151,6 +151,7 @@ if generate:
 # Вывод
 if html := st.session_state.get("generated_html"):
     st.subheader("Результат")
+
     report = validate_markup(html)
     if report["ok"]:
         st.success("Проверки пройдены ✓")
@@ -159,9 +160,17 @@ if html := st.session_state.get("generated_html"):
         for item in report["issues"]:
             st.write("• ", item)
 
+    # Кнопка скачивания ГЕНЕРИРУЕМОГО HTML
     fname = f"markup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-    st.download_button("💾 Скачать HTML", html, fname, "text/html", use_container_width=True)
+    st.download_button(
+        label="💾 Скачать HTML",
+        data=html,
+        file_name=fname,
+        mime="text/html",
+        use_container_width=True,
+    )
 
+    # Предпросмотр
     st.divider()
     st.subheader("Предпросмотр")
     if hasattr(st, "html"):
@@ -172,4 +181,4 @@ if html := st.session_state.get("generated_html"):
     with st.expander("Показать чистый HTML"):
         st.code(html, language="html")
 
-st.caption("ℹ️ Ответ должен быть РОВНО одним HTML-блоком: начинается с <div class=\"markup-seo-page\"> и заканчивается </div>.")
+st.caption("ℹ️ После нажатия «Сгенерировать HTML» ниже появится блок «Результат»: предпросмотр и кнопка «Скачать HTML».")
