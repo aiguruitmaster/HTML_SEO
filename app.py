@@ -26,6 +26,7 @@ OPENAI_KEY = st.secrets.get("OPENAI_API_KEY", "")
 SECRET_KEYS = {
     "RocketPlay": ["HTML_PROMPT_RP", "HTML_PROMPT"],              # совместимость со старым ключом
     "WinSpirit / LuckyHills": ["HTML_PROMPT_WS_LH"],
+    "Zoome": ["HTML_PROMPT_ZOOME"],                               # ⬅️ новый бренд
 }
 
 MODEL          = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-5")  # можно переопределить переменной окружения
