@@ -18,10 +18,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =====================
-# Секреты/настройки
+# Конфиг/секреты
 # =====================
-OPENAI_KEY  = st.secrets.get("OPENAI_API_KEY", "")
-BASE_PROMPT = st.secrets.get("HTML_PROMPT", "")  # ← здесь ДОЛЖЕН быть ваш строгий промпт c TARGET HTML TEMPLATE
+OPENAI_KEY = st.secrets.get("OPENAI_API_KEY", "")
+
+# ❶ Ключи секретов для разных брендов
+SECRET_KEYS = {
+    "RocketPlay": ["HTML_PROMPT_RP", "HTML_PROMPT"],              # совместимость со старым ключом
+    "WinSpirit / LuckyHills": ["HTML_PROMPT_WS_LH"],
+}
 
 MODEL          = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-5")  # можно переопределить переменной окружения
 PREVIEW_HEIGHT = int(os.getenv("HTML_PREVIEW_HEIGHT", "1200"))
@@ -33,6 +38,7 @@ PLACEHOLDER    = "Тут должен быть текст который вст�
 st.session_state.setdefault("raw_text", "")
 st.session_state.setdefault("result_text", None)
 st.session_state.setdefault("do_clear", False)
+st.session_state.setdefault("brand", "RocketPlay")
 
 if st.session_state.get("do_clear"):
     st.session_state["raw_text"] = ""
@@ -42,13 +48,27 @@ if st.session_state.get("do_clear"):
 # =====================
 # Хелперы
 # =====================
-def build_prompt(raw_text: str) -> str:
+def resolve_base_prompt(brand: str) -> tuple[str, str]:
+    """
+    Возвращает (prompt, used_secret_key) для выбранного бренда.
+    Бросает ValueError, если подходящего секрета нет.
+    """
+    keys = SECRET_KEYS.get(brand, [])
+    for k in keys:
+        v = st.secrets.get(k, "")
+        if v:
+            return v, k
+    raise ValueError(
+        f"Не найден промпт для «{brand}». Добавьте секрет(ы): {', '.join(keys)}."
+    )
+
+def build_prompt(base_prompt: str, raw_text: str) -> str:
     """Только подстановка. НИКАКИХ локальных исправлений."""
-    if not BASE_PROMPT:
+    if not base_prompt:
         return raw_text
-    if PLACEHOLDER in BASE_PROMPT:
-        return BASE_PROMPT.replace(PLACEHOLDER, raw_text)
-    return f"{BASE_PROMPT}\n\n{raw_text}"
+    if PLACEHOLDER in base_prompt:
+        return base_prompt.replace(PLACEHOLDER, raw_text)
+    return f"{base_prompt}\n\n{raw_text}"
 
 def strip_code_fences(t: str) -> str:
     t = (t or "").strip()
@@ -92,8 +112,15 @@ def looks_like_html(s: str) -> bool:
 # =====================
 st.title("🧩 HTML Transformer — промпт возвращает готовый HTML")
 
+# ❷ Выбор шаблона/бренда
+st.session_state["brand"] = st.selectbox(
+    "Шаблон / бренд",
+    options=list(SECRET_KEYS.keys()),
+    index=list(SECRET_KEYS.keys()).index(st.session_state.get("brand", "RocketPlay")),
+)
+
 raw = st.text_area(
-    "Исходный текст (подставится в ваш HTML_PROMPT)",
+    "Исходный текст (подставится в промпт выбранного бренда)",
     key="raw_text", height=280, placeholder="Вставьте контент…",
 )
 
@@ -108,8 +135,13 @@ with c2:
 # Обязательные секреты
 if not OPENAI_KEY:
     st.error("Не найден OPENAI_API_KEY в secrets."); st.stop()
-if not BASE_PROMPT:
-    st.error("Не найден HTML_PROMPT в secrets. Поместите ваш строгий промпт c TARGET HTML TEMPLATE в secrets.toml."); st.stop()
+
+# Разрешим пользователю увидеть, из какого секрета берём промпт
+try:
+    BASE_PROMPT, USED_SECRET_KEY = resolve_base_prompt(st.session_state["brand"])
+    st.caption(f"Используется секрет: **{USED_SECRET_KEY}**")
+except ValueError as e:
+    st.error(str(e)); st.stop()
 
 # Генерация (без повторов/правок)
 if generate:
@@ -118,7 +150,7 @@ if generate:
     else:
         with st.spinner("Генерация…"):
             try:
-                prompt = build_prompt(raw.strip())
+                prompt = build_prompt(BASE_PROMPT, raw.strip())
                 out = call_openai(prompt)
             except Exception as e:
                 st.exception(e); st.stop()
@@ -143,4 +175,4 @@ if out:
     with st.expander("Показать как текст"):
         st.code(out, language="html")
 
-st.caption("Здесь НЕТ автоправок и валидаций. Если результат не соответствует — корректируйте ваш HTML_PROMPT.")
+st.caption("Здесь НЕТ автоправок и валидаций. Если результат не соответствует — корректируйте ваш HTML_PROMPT_* в secrets.")
