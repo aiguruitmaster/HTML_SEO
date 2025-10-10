@@ -64,12 +64,32 @@ def resolve_base_prompt(brand: str) -> tuple[str, str]:
     )
 
 def build_prompt(base_prompt: str, raw_text: str) -> str:
-    """Только подстановка. НИКАКИХ локальных исправлений."""
+    """Подставляет RAW в известные плейсхолдеры разных брендов; иначе — добавляет в конец."""
     if not base_prompt:
         return raw_text
-    if PLACEHOLDER in base_prompt:
-        return base_prompt.replace(PLACEHOLDER, raw_text)
-    return f"{base_prompt}\n\n{raw_text}"
+    rt = raw_text.strip()
+
+    # Набор возможных маркеров в секретах
+    replacements = [
+        # RocketPlay/универсальный
+        ("Тут должен быть текст который вставил юзер", rt),
+        ("[RAW CONTENT]", rt),
+        # WinSpirit / LuckyHills
+        ("<<ВСТАВЬ ИСХОДНЫЙ ТЕКСТ>>", rt),
+        ("SOURCE_TEXT:", f"SOURCE_TEXT:\n{rt}"),
+        # Zoome (в конце секрета идёт «ВХОД», ждут сам текст сразу после)
+        ("\nВХОД\n", f"\nВХОД\n{rt}\n"),
+    ]
+
+    out = base_prompt
+    for marker, repl in replacements:
+        if marker in out:
+            out = out.replace(marker, repl)
+            return out  # как только успешно подменили — выходим
+
+    # fallback: просто дописать
+    return f"{base_prompt.rstrip()}\n\n{rt}\n"
+
 
 def strip_code_fences(t: str) -> str:
     t = (t or "").strip()
