@@ -1,4 +1,6 @@
+# streamlit_app.py
 import os
+import re
 from datetime import datetime
 
 import streamlit as st
@@ -24,14 +26,14 @@ OPENAI_KEY = st.secrets.get("OPENAI_API_KEY", "")
 
 # ❶ Ключи секретов для разных брендов
 SECRET_KEYS = {
-    "RocketPlay": ["HTML_PROMPT_RP", "HTML_PROMPT"],              # совместимость со старым ключом
+    "RocketPlay": ["HTML_PROMPT_RP", "HTML_PROMPT"],            # совместимость со старым ключом
     "WinSpirit / LuckyHills": ["HTML_PROMPT_WS_LH"],
-    "Zoome": ["HTML_PROMPT_ZOOME"],                               # ⬅️ новый бренд
+    "Zoome": ["HTML_PROMPT_ZOOME"],
 }
 
 MODEL          = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-4.1-mini")  # можно переопределить переменной окружения
 PREVIEW_HEIGHT = int(os.getenv("HTML_PREVIEW_HEIGHT", "1200"))
-PLACEHOLDER    = "Тут должен быть текст который вставил юзер"
+PLACEHOLDER    = "Тут должен быть текст который вставил юзер"          # для старых секретов
 
 # =====================
 # Session State (очистка до виджетов)
@@ -63,33 +65,53 @@ def resolve_base_prompt(brand: str) -> tuple[str, str]:
         f"Не найден промпт для «{brand}». Добавьте секрет(ы): {', '.join(keys)}."
     )
 
-def build_prompt(base_prompt: str, raw_text: str) -> str:
-    """Подставляет RAW в известные плейсхолдеры разных брендов; иначе — добавляет в конец."""
+def build_prompt(base_prompt: str, raw_text: str, brand: str | None = None) -> str:
+    """
+    Надёжно подставляет сырой текст во ВСЕ популярные форматы секретов:
+    - RocketPlay: точная фраза или [RAW CONTENT]
+    - WinSpirit/LuckyHills: SOURCE_TEXT: <<...>> или <<ВСТАВЬ ИСХОДНЫЙ ТЕКСТ>>
+    - Zoome: после строки «ВХОД» (сам текст сразу после)
+    Если ничего не найдено — добавляет в конец секрета.
+    """
     if not base_prompt:
         return raw_text
-    rt = raw_text.strip()
 
-    # Набор возможных маркеров в секретах
-    replacements = [
-        # RocketPlay/универсальный
-        ("Тут должен быть текст который вставил юзер", rt),
-        ("[RAW CONTENT]", rt),
-        # WinSpirit / LuckyHills
-        ("<<ВСТАВЬ ИСХОДНЫЙ ТЕКСТ>>", rt),
-        ("SOURCE_TEXT:", f"SOURCE_TEXT:\n{rt}"),
-        # Zoome (в конце секрета идёт «ВХОД», ждут сам текст сразу после)
-        ("\nВХОД\n", f"\nВХОД\n{rt}\n"),
-    ]
-
+    rt = (raw_text or "").strip()
     out = base_prompt
-    for marker, repl in replacements:
-        if marker in out:
-            out = out.replace(marker, repl)
-            return out  # как только успешно подменили — выходим
 
-    # fallback: просто дописать
-    return f"{base_prompt.rstrip()}\n\n{rt}\n"
+    # 0) Универсальный маркер [RAW CONTENT] — вставить НИЖЕ метки
+    out2 = re.sub(r"(\[RAW CONTENT\])", r"\1\n" + rt, out, count=1)
+    if out2 != out:
+        return out2
 
+    # 1) RocketPlay — подстановка точной фразы
+    out2 = out.replace(PLACEHOLDER, rt)
+    if out2 != out:
+        return out2
+
+    # 2) WinSpirit/LuckyHills — форма SOURCE_TEXT: <<...>> (сохраняем угловые скобки)
+    out2 = re.sub(
+        r"(SOURCE_TEXT:\s*<<)(.*?)(>>)",
+        r"\1" + re.escape(rt) + r"\3",
+        out,
+        count=1,
+        flags=re.DOTALL
+    )
+    if out2 != out:
+        return out2
+
+    # 2.1) Альтернативный маркер без SOURCE_TEXT
+    out2 = out.replace("<<ВСТАВЬ ИСХОДНЫЙ ТЕКСТ>>", rt)
+    if out2 != out:
+        return out2
+
+    # 3) Zoome — блок «ВХОД» в конце секрета; вставляем текст сразу после строки ВХОД
+    pattern_vhod = re.compile(r"(?:^|\n)ВХОД\s*\n\s*$", flags=re.DOTALL)
+    if pattern_vhod.search(out):
+        return pattern_vhod.sub(lambda m: m.group(0) + rt + "\n", out, count=1)
+
+    # 4) Fallback — просто добавить в конец
+    return out.rstrip() + "\n\n" + rt + "\n"
 
 def strip_code_fences(t: str) -> str:
     t = (t or "").strip()
@@ -100,11 +122,19 @@ def strip_code_fences(t: str) -> str:
     return t.strip()
 
 def call_openai(f_prompt: str) -> str:
-    """Свободный вызов: без temperature, без max_tokens. Никаких автопочинок."""
+    """
+    Детерминированный свободный вызов (без «креатива»).
+    Responses API c temperature=0 и адекватным фолбэком на Chat Completions (тоже temperature=0).
+    """
     client = OpenAI(api_key=OPENAI_KEY)
-    # Responses API
+
     try:
-        r = client.responses.create(model=MODEL, input=f_prompt)
+        r = client.responses.create(
+            model=MODEL,
+            input=f_prompt,
+            temperature=0,
+            max_output_tokens=4096,
+        )
         if getattr(r, "output_text", None):
             return strip_code_fences(r.output_text)
         if getattr(r, "output", None):
@@ -117,10 +147,10 @@ def call_openai(f_prompt: str) -> str:
                 return strip_code_fences("".join(parts))
         raise RuntimeError("Empty response")
     except Exception:
-        # Chat Completions fallback (совместимость)
         c = client.chat.completions.create(
             model=MODEL,
             messages=[{"role": "user", "content": f_prompt}],
+            temperature=0,
         )
         return strip_code_fences(c.choices[0].message.content)
 
@@ -134,10 +164,11 @@ def looks_like_html(s: str) -> bool:
 st.title("🧩 HTML Transformer — промпт возвращает готовый HTML")
 
 # ❷ Выбор шаблона/бренда
+brand_options = list(SECRET_KEYS.keys())
 st.session_state["brand"] = st.selectbox(
     "Шаблон / бренд",
-    options=list(SECRET_KEYS.keys()),
-    index=list(SECRET_KEYS.keys()).index(st.session_state.get("brand", "RocketPlay")),
+    options=brand_options,
+    index=brand_options.index(st.session_state.get("brand", "RocketPlay")),
 )
 
 raw = st.text_area(
@@ -171,7 +202,7 @@ if generate:
     else:
         with st.spinner("Генерация…"):
             try:
-                prompt = build_prompt(BASE_PROMPT, raw.strip())
+                prompt = build_prompt(BASE_PROMPT, raw.strip(), st.session_state.get("brand"))
                 out = call_openai(prompt)
             except Exception as e:
                 st.exception(e); st.stop()
@@ -196,4 +227,4 @@ if out:
     with st.expander("Показать как текст"):
         st.code(out, language="html")
 
-st.caption("Здесь НЕТ автоправок и валидаций. Если результат не соответствует — корректируйте ваш HTML_PROMPT_* в secrets.")
+st.caption("Здесь НЕТ автоправок и валидаций. Если результат не соответствует — корректируйте ваш HTML_PROMPT_* в secrets. Для максимально строгого следования шаблону можно временно поднять модель до gpt-4.1.")
