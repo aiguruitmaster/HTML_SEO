@@ -7,7 +7,6 @@ HTML Transformer — промпт возвращает готовый HTML (бе
 from __future__ import annotations
 
 import os
-import re
 from datetime import datetime
 from typing import Dict, Iterable, Tuple
 
@@ -29,14 +28,14 @@ OPENAI_KEY: str = st.secrets.get("OPENAI_API_KEY", "")
 SECRET_KEYS: Dict[str, Iterable[str]] = {
     "RocketPlay": ["HTML_PROMPT_RP", "HTML_PROMPT"],  # совместимость со старым ключом
     "WinSpirit / LuckyHills": ["HTML_PROMPT_WS_LH"],
-    "Zoome": ["HTML_PROMPT_ZOOME"],  # новый бренд
+    "Zoome": ["HTML_PROMPT_ZOOME"],  # ⬅️ новый бренд
 }
 
 # Можно переопределить переменными окружения
 MODEL: str = os.getenv("HTML_TRANSFORMER_MODEL", "gpt-4.1-mini")
 PREVIEW_HEIGHT: int = int(os.getenv("HTML_PREVIEW_HEIGHT", "1200"))
 
-# Плейсхолдер (не обязателен к использованию в новой схеме, оставлен для совместимости)
+# Плейсхолдер для подстановки текста пользователя в base prompt
 PLACEHOLDER = "Тут должен быть текст который вставил юзер"
 
 
@@ -93,30 +92,13 @@ def resolve_base_prompt(brand: str) -> Tuple[str, str]:
     raise ValueError(f"Не найден промпт для «{brand}». Добавьте секрет(ы): {', '.join(keys)}.")
 
 
-# ---- Новый блок: готовим system-prompt с «СТРОГИМ ПРИМЕРОМ», не вырезая его
-
-EXAMPLE_TITLE_RE = re.compile(r"(?:^|\n)\s*СТРОГИЙ\s+ПРИМЕР\b", flags=re.IGNORECASE)
-
-def prepare_system_prompt_with_example(base_prompt: str) -> str:
-    """
-    Не удаляем «СТРОГИЙ ПРИМЕР», а помечаем его как иллюстрацию и добавляем пролог,
-    который запрещает переносить данные из примера. Пользовательский SOURCE_TEXT
-    придёт отдельным user-сообщением.
-    """
-    # Помечаем заголовок примера (если он есть)
-    marked = EXAMPLE_TITLE_RE.sub(
-        "\nСТРОГИЙ ПРИМЕР (ДАННЫЕ ИСПОЛЬЗОВАТЬ НЕЛЬЗЯ — ТОЛЬКО ИЛЛЮСТРАЦИЯ)\n",
-        base_prompt,
-    )
-
-    preface = (
-        "ВАЖНО:\n"
-        "1) Секция «СТРОГИЙ ПРИМЕР» приведена ТОЛЬКО для иллюстрации формата.\n"
-        "   ЧИСЛА/БРЕНДЫ/ДАТЫ из примера ИСПОЛЬЗОВАТЬ НЕЛЬЗЯ.\n"
-        "2) Заполняй шаблон ТОЛЬКО по фактическому SOURCE_TEXT из следующего сообщения пользователя.\n"
-        "3) Верни строго один HTML-документ без комментариев и Markdown.\n"
-    )
-    return f"{preface}\n{marked}".strip()
+def build_prompt(base_prompt: str, raw_text: str) -> str:
+    """Только подстановка. НИКАКИХ локальных исправлений."""
+    if not base_prompt:
+        return raw_text
+    if PLACEHOLDER in base_prompt:
+        return base_prompt.replace(PLACEHOLDER, raw_text)
+    return f"{base_prompt}\n\n{raw_text}"
 
 
 def strip_code_fences(text: str) -> str:
@@ -132,28 +114,22 @@ def strip_code_fences(text: str) -> str:
     return t.strip()
 
 
-def call_openai_with_messages(system_prompt: str, user_text: str) -> str:
+def call_openai(f_prompt: str) -> str:
     """
-    Жёсткая схема: system = инструкции/шаблон/пример, user = реальный SOURCE_TEXT.
-    Никаких автопочинок, только постобрезка тройных бэктиков.
+    Свободный вызов к OpenAI без temperature / max_tokens. Никаких автопочинок.
+    Сначала пробуем Responses API, затем — чатовый фолбэк для совместимости.
     """
     client = OpenAI(api_key=OPENAI_KEY)
 
     # Responses API
     try:
-        r = client.responses.create(
-            model=MODEL,
-            input=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": f"SOURCE_TEXT:\n{user_text}"},
-            ],
-        )
+        r = client.responses.create(model=MODEL, input=f_prompt)
 
         # Прямое поле текстового вывода (новые SDK)
         if getattr(r, "output_text", None):
             return strip_code_fences(r.output_text)
 
-        # Универсальный сбор кусочков
+        # Универсальный сбор кусочков (на всякий случай)
         if getattr(r, "output", None):
             parts: list[str] = []
             for item in r.output:
@@ -165,13 +141,10 @@ def call_openai_with_messages(system_prompt: str, user_text: str) -> str:
 
         raise RuntimeError("Empty response")
     except Exception:
-        # Chat Completions fallback (совместимость)
+        # Chat Completions fallback (совместимость со старыми/альтернативными эндпоинтами)
         c = client.chat.completions.create(
             model=MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": f"SOURCE_TEXT:\n{user_text}"},
-            ],
+            messages=[{"role": "user", "content": f_prompt}],
         )
         return strip_code_fences(c.choices[0].message.content)
 
@@ -285,8 +258,8 @@ def main() -> None:
         else:
             with st.spinner("Генерация…"):
                 try:
-                    system_prompt = prepare_system_prompt_with_example(base_prompt)
-                    out = call_openai_with_messages(system_prompt, raw.strip())
+                    prompt = build_prompt(base_prompt, raw.strip())
+                    out = call_openai(prompt)
                     st.session_state["result_text"] = out
                 except Exception as e:  # показываем стек в dev-режиме
                     st.exception(e)
