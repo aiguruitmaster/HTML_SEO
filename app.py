@@ -34,7 +34,7 @@ HTML_PROMPT: str = r"""You are a rigorous HTML transformer. Output ONLY one HTML
 """
 
 # 2) Админка #2 (WinSpirit / LuckyHills) — ЖЁСТКИЙ конвертер, возвращает ровно заданный текст/HTML
-HTML_PROMPT_WS_LH: str = rSEO_HTML_PROMPT_V4: str = r"""
+HTML_PROMPT_WS_LH: str = r"""
 You are a rigorous SEO HTML transformer.
 
 OUTPUT FORMAT (strict):
