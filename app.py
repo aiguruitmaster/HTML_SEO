@@ -34,65 +34,55 @@ HTML_PROMPT: str = r"""You are a rigorous HTML transformer. Output ONLY one HTML
 """
 
 # 2) Админка #2 (WinSpirit / LuckyHills) — ЖЁСТКИЙ конвертер, возвращает ровно заданный текст/HTML
-HTML_PROMPT_WS_LH: str = r"""You are an HTML converter.
+HTML_PROMPT_WS_LH: str = r"""You are a rigorous SEO HTML transformer.
 
-GOAL
-Transform ANY input text into the EXACT HTML structure below while rewriting/fitting the content from the input. Keep all tag names, heading order, link hrefs, table schemas, and section layout identical to the template. Do NOT invent facts that contradict the source. If the source lacks details for a field, write a short neutral sentence that stays on-topic and Australian, or leave a dash (–) in table cells that have no data.
+OUTPUT FORMAT (strict):
+1) Line 1: Meta Title: <title generated from RAW CONTENT (max ~70 chars)>
+2) Line 2: Meta Description: <description from RAW CONTENT (140–160 chars)>
+3) Immediately after line 2: ONE (1) HTML block ONLY. No other text before/after. No code fences. No explanations.
 
-STYLE & CONSTRAINTS
-- Audience: Australian players.
-- Brand: keep the brand “Lucky Hills” exactly as written in the template.
-- Currency: use AUD when amounts are present in the source; otherwise keep given numbers or replace with en-dash (–) if unknown.
-- Tone: clear, factual, promotional but compliant; no promises of guaranteed wins; include responsible-gaming mentions when relevant.
-- Paraphrase the source; do not copy long spans verbatim; avoid contradictions.
-- Keep all anchor hrefs exactly as in the template.
-- Use only these tags: h1, h2, h3, p, section, ul, li, table, tbody, tr, td, a.
-- Output RAW HTML ONLY (no code fences, no explanations, no Markdown).
+HARD RULES:
+- Keep the TARGET HTML TEMPLATE structure 100% identical (same tags, nesting, order, attributes, and counts).
+- Replace ONLY inner visible text nodes using information from RAW CONTENT. Do not add, remove, or reorder elements.
+- Keep ALL <a> href attributes unchanged and keep EXACTLY 8 <a> tags in the same positions as in the template.
+- Keep EXACTLY 2 <table> elements with row counts [3, 6] respectively; do not add/remove <tr> or <td>.
+- Keep the number and order of <section>, <h1>, <h2>, <h3>, <ul>/<li>, and <p> exactly as in the template.
+- Language: match the language of RAW CONTENT. If RAW CONTENT is mixed, use the majority language consistently across the whole output.
+- Do NOT invent facts, numbers, or entities; derive everything from RAW CONTENT. If a required cell/phrase has no support in RAW CONTENT, write a single dash "-" in that spot.
+- If text overflows, condense with commas/semicolons; keep concise, on-topic phrasing.
+- Do NOT escape characters from RAW CONTENT; keep visible text exactly as given (use straight quotes).
+- Preserve any HTML entities already present in the TARGET HTML TEMPLATE as-is.
+- Whitespace: do not add leading/trailing lines. The very first line must start with "Meta Title:" and the last character of the output must be the closing ">" of the last </section> tag.
+- Do not change capitalization of anchor texts unless required by RAW CONTENT meaning.
+- Never output placeholder labels like “RAW CONTENT” or “TARGET HTML TEMPLATE” in the final result.
 
-MAPPING RULES (derive from the input)
-- Meta Title: ≤60–65 chars if possible; include “Casino Bingo Online Australia – Lucky Hills Bingo Games Real Money” wording unless the source strongly suggests a different but equivalent phrasing.
-- Meta Description: 140–160 chars summarising key features found in the source (games, mobile, bonuses, security). If info is sparse, write a generic, accurate summary.
-- Headings (<h1>, <h2>, <h3>) must match the template text exactly.
-- Paragraphs & lists: rewrite using the input’s terminology (games, providers, features, bonuses, tournaments, RTP, mobile, security, responsible play). If the input mentions specific titles or providers, prefer those. If not available, write general but truthful copy.
-- “Popular Bingo Games”: if the source lists games (slots/keno/plinko/bingo), adapt their names here; otherwise create plausible generic items without fabricating claims.
-- “Bingo Rooms / Ball Bingo Variations”: keep the three bullets as written; adjust nearby paragraphs using source info about formats, tickets, patterns, jackpots.
-- “Welcome Bonus Package” table: if the source provides exact percentages/spins/min deposit, use them; otherwise keep the structure and fill unknown cells with “–”.
-- “Bingo Bonus Casino Promotions” list: map source promotions (cashback, free spins/tickets, weekend/weekly offers, tournaments). If absent, provide neutral, generic items.
-- “Game Providers and Quality” table: insert up to 6 providers present in the source with an approximate “Games Available” count if given; if unknown, keep the template rows or use “–”.
-- Tournaments & progressive jackpots: reflect any amounts/titles from the source; otherwise write neutral copy without concrete figures.
-- Security/licensing/responsible gaming/mobile/banking: summarise what the source says; if silent, use generic, accurate statements (SSL, encryption, deposit limits, self-exclusion, mobile-optimised).
-- FAQ: populate answers with facts from the source; if missing, keep answers generic and accurate.
+[RAW CONTENT]
+<Тут вставь любой исходный текст пользователя. Можно много — промпт сам ужмёт и распределит смысл по разделам шаблона.>
 
-INPUT (to be transformed)
-{Тут должен быть текст который вставил юзер}
-
-OUTPUT (produce EXACTLY this structure with content rewritten from the input; keep every heading/link/table layout unchanged; write inside the tags):
+[TARGET HTML TEMPLATE]
 Meta Title: Casino Bingo Online Australia - Lucky Hills Bingo Games Real Money
-Meta Description: [1–2 sentence summary derived from the source, 140–160 chars.]
-
+Meta Description: Play casino bingo online at Lucky Hills Australia. Enjoy bingo games, free bingo, mobile bingo with real money prizes. Join our bingo rooms today!
 <h1>Casino Bingo Online at Lucky Hills Australia</h1>
-<p>[Intro paragraph rewritten from the source.]</p>
-
+<p>Welcome to Lucky Hills, where we bring you the ultimate casino bingo online experience for Australian players. At our casino Lucky Hills, we provide an exceptional collection of games that combine traditional fun with modern online gaming technology. Our platform offers players in Australia the perfect place to enjoy bingo and casino entertainment from the comfort of their own home.</p>
 <section>
 <h2>Online Bingo Experience at Our Casino</h2>
-<p>[Overview of bingo offering; use providers/features mentioned in the source.]</p>
+<p>We pride ourselves on offering an extensive range of online bingo games that cater to every player's preferences. Our bingo casino features titles from top-tier providers including Mascot Gaming, Betsoft, VoltEnt, Platipus, and Bgaming. Each game delivers authentic experience with modern twists and exciting features.</p>
 <p>The variety of <a href="/">online casino for real money in Australia</a> gaming options makes Lucky Hills the perfect place for Australian players seeking quality entertainment.</p>
 <h3>Popular Bingo Games</h3>
-<p>[Lead-in sentence.]</p>
+<p>Our collection includes various bingo games that guarantee hours of entertainment and chances to win real money. Here are some of our most popular titles that you can discover:</p>
 <ul>
-<li>[Game 1 from source or generic]</li>
-<li>[Game 2]</li>
-<li>[Game 3]</li>
-<li>[Game 4]</li>
-<li>[Game 5]</li>
-<li>[Game 6]</li>
-<li>[Game 7]</li>
+<li>Mayan Riches Bingo - Ancient treasures meet modern bingo fun</li>
+<li>Wild Bingo - Classic bingo with wild multipliers</li>
+<li>Extra Bingo - Enhanced gameplay with bonus features</li>
+<li>Across Universe Keno - Space-themed keno adventure</li>
+<li>Amaterasu Keno - Japanese-inspired keno experience</li>
+<li>Plinko XY - Exciting ball-drop variant</li>
+<li>Olympus Plinko - Mythological plinko adventure</li>
 </ul>
 </section>
-
 <section>
 <h2>Bingo Rooms and Gaming Environment</h2>
-<p>[Room variety, ticket prices, prize money, community—based on source.]</p>
+<p>Within our online bingo rooms, you are able to enjoy a wide array of variations. Every bingo room has something for you whether it&rsquo;s about ticket prices, prize money or playing style, you choose. When enough players join the game, it recreates a community at large.</p>
 <p>For those who enjoy table games, our <a href="/live/categories/roulette">online roulette in Australia</a> section provides additional excitement between sessions.</p>
 <h3>Ball Bingo Variations</h3>
 <p>We offer several ball bingo variations to keep the excitement fresh and ensure you never miss out on winning opportunities:</p>
@@ -101,153 +91,208 @@ Meta Description: [1–2 sentence summary derived from the source, 140–160 cha
 <li>75-Ball Bingo - American-style with certain pattern completions</li>
 <li>30-Ball Bingo - Fast-paced mini for quick wins</li>
 </ul>
-<p>[One sentence on jackpots/payouts if present in source.]</p>
+<p>Each variation offers unique winning combinations and progressive jackpot opportunities that can result in substantial winnings.</p>
 <h3>Bingo Cards and Bingo Tickets</h3>
-<p>[Auto-marking, called numbers, ease-of-use—reflect source.]</p>
-<p>[Tickets/multiple purchase/pricing—reflect source.]</p>
+<p>Our bingo tickets feature clear, easy-to-read bingo cards with automatically marked numbers. When the game starts, numbers are called automatically, and your cards are marked instantly. This system ensures you never miss a winning ticket or certain pattern completion.</p>
+<p>Players can purchase multiple bingo tickets to increase their chances of winning, with each ticket offering the same chance of success. The ticket price varies depending on the game and potential prizes available.</p>
 </section>
-
 <section>
 <h2>Mobile Bingo Games</h2>
-<p>[Mobile support summary based on source.]</p>
+<p>Australian players can enjoy our mobile bingo games on any device, anywhere. Our mobile platform provides the same quality experience as desktop gaming, with optimised interfaces for smartphones and tablets. Playing online has never been more convenient or accessible.</p>
 <p>The mobile experience includes access to our <a href="/casino/categories/slots">online pokies for real money</a> collection, providing variety when you want a break from bingo.</p>
 </section>
-
 <section>
 <h2>Welcome Bonus and Casino Bingo Promotions</h2>
-<p>[General promo overview from source.]</p>
+<p>We offer generous welcome bonus packages for new Australian players joining our bingo online casino. Our current promotional structure includes exciting opportunities to boost your bankroll and extend your gameplay with additional cash and free spins.</p>
 <h3>Welcome Bonus Package</h3>
-<p>[Lead-in sentence.]</p>
+<p>Our welcome bonus structure provides excellent value for new players looking to play bingo online:</p>
 <table>
 <tbody>
 <tr>
-<td><p>Deposit</p></td>
-<td><p>Bonus</p></td>
-<td><p>Free Spins</p></td>
-<td><p>Minimum Deposit</p></td>
+<td>
+<p>Deposit</p>
+</td>
+<td>
+<p>Bonus</p>
+</td>
+<td>
+<p>Free Spins</p>
+</td>
+<td>
+<p>Minimum Deposit</p>
+</td>
 </tr>
 <tr>
-<td><p>First</p></td>
-<td><p>[e.g., 100% Match or –]</p></td>
-<td><p>[e.g., 100 Free Spins or –]</p></td>
-<td><p>[e.g., 30 AUD or –]</p></td>
+<td>
+<p>First</p>
+</td>
+<td>
+<p>100% Match</p>
+</td>
+<td>
+<p>100 Free Spins</p>
+</td>
+<td>
+<p>30 AUD</p>
+</td>
 </tr>
 <tr>
-<td><p>Second</p></td>
-<td><p>[e.g., 200% Match or –]</p></td>
-<td><p>[-]</p></td>
-<td><p>[e.g., 30 AUD or –]</p></td>
+<td>
+<p>Second</p>
+</td>
+<td>
+<p>200% Match</p>
+</td>
+<td>
+<p>-</p>
+</td>
+<td>
+<p>30 AUD</p>
+</td>
 </tr>
 </tbody>
 </table>
 <h3>Bingo Bonus Casino Promotions</h3>
-<p>[Lead-in sentence.]</p>
+<p>We regularly run casino bingo promotions to keep the excitement alive for our loyal players. These promotions include cashback offers, free tickets, and special tournaments with substantial prize pools featuring progressive jackpot elements.</p>
 <p>Current Promotions Include:</p>
 <ul>
-<li>[Promo 1 from source or generic]</li>
-<li>[Promo 2]</li>
-<li>[Promo 3]</li>
-<li>[Promo 4]</li>
+<li>No-deposit weekly cashback up to 5%</li>
+<li>Wednesday free spins - up to 50 free spins</li>
+<li>Sunday gifts with up to 30% bonus</li>
+<li>Provider tournaments with prize pools exceeding 650,000 AUD</li>
 </ul>
 <p>Our <a href="/promotions/casino">deposit bonus casino</a> section provides full details about all available offers and their wagering requirements.</p>
 </section>
-
 <section>
 <h2>Casino with Bingo - Progressive Jackpot Opportunities</h2>
-<p>[Progressives overview; use source data if any.]</p>
+<p>Many of our games feature progressive jackpot elements that grow with each game played. These jackpots can reach substantial amounts, providing life-changing win potential for lucky players. Our <a href="/casino/categories/jackpot">progressive jackpot slots online</a> section also complements the bingo experience perfectly.</p>
 <p>The progressive jackpot system means that every bet contributes to growing prize pools, creating excitement and anticipation with each game. Winners can claim these substantial prizes when luck strikes.</p>
 </section>
-
 <section>
 <h2>Game Providers and Quality</h2>
-<p>[Provider portfolio summary using names from the source.]</p>
+<p>We partner with established providers to ensure our games meet the highest standards. Our provider portfolio includes top developers who complete our gaming experience:</p>
 <table>
 <tbody>
 <tr>
-<td><p>Provider</p></td>
-<td><p>Games Available</p></td>
+<td>
+<p>Provider</p>
+</td>
+<td>
+<p>Games Available</p>
+</td>
 </tr>
-<tr><td><p>[Provider 1]</p></td><td><p>[Count or –]</p></td></tr>
-<tr><td><p>[Provider 2]</p></td><td><p>[Count or –]</p></td></tr>
-<tr><td><p>[Provider 3]</p></td><td><p>[Count or –]</p></td></tr>
-<tr><td><p>[Provider 4]</p></td><td><p>[Count or –]</p></td></tr>
-<tr><td><p>[Provider 5]</p></td><td><p>[Count or –]</p></td></tr>
-<tr><td><p>[Provider 6]</p></td><td><p>[Count or –]</p></td></tr>
+<tr>
+<td>
+<p>Mascot Gaming</p>
+</td>
+<td>
+<p>87 games</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>NetGame</p>
+</td>
+<td>
+<p>114 games</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Playson</p>
+</td>
+<td>
+<p>58 games</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>VoltEnt</p>
+</td>
+<td>
+<p>253 games</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Fugaso</p>
+</td>
+<td>
+<p>60 games</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Platipus</p>
+</td>
+<td>
+<p>144 games</p>
+</td>
+</tr>
 </tbody>
 </table>
-<p>[Closing sentence.]</p>
+<p>And this is just the beginning of the list of providers on our platform. They make incredible pokies, live games, and much more.</p>
 <h3>Game Quality and Features</h3>
-<p>[Performance/RNG/loading—based on source or generic.]</p>
+<p>Each bingo game in our collection offers smooth gameplay, clear graphics, and fair random number generation. The games load quickly and run smoothly on all devices, ensuring consistent entertainment value and fun for every player.</p>
 </section>
-
 <section>
 <h2>Deposit and Banking Options</h2>
-<p>[Payments, min deposit, speed—based on source.]</p>
+<p>Australian players can easily fund their accounts using various secure deposit methods. Our minimum deposit requirement of 30 Australian dollars to receive the Welcome Bonus makes our games accessible to players with different budgets. The deposit process is straightforward and secure, allowing you to start playing within minutes.</p>
 <p>Card games enthusiasts can also explore our <a href="/live/categories/poker">online poker in Australia for real money</a> tables for additional gaming variety.</p>
 </section>
-
 <section>
 <h2>Online Bingo Casino Australia - Security and Licensing</h2>
-<p>[Licensing/security summary from source or generic SSL/encryption statement.]</p>
+<p>Lucky Hills operates as a licensed online bingo casino Australia, ensuring all games meet international standards for fairness and security. Your personal information and financial transactions are protected using advanced encryption technology, giving you peace of mind while you play.</p>
 </section>
-
 <section>
 <h2>Classic Bingo and Traditional Formats</h2>
-<p>[Traditional experience paragraph derived from source or generic.]</p>
+<p>For players who prefer traditional gameplay, our classic bingo selection offers authentic experiences that capture the essence of traditional bingo halls. These games feature familiar rules and straightforward gameplay that appeals to both newcomers and experienced players.</p>
 </section>
-
 <section>
 <h2>Additional Gaming Options Beyond Bingo Online</h2>
-<p>[Other verticals—slots/live tables—based on source.]</p>
+<p>Beyond bingo online, our casino offers complementary gaming experiences. Players enjoy slots collections, <a href="/live">live casino online for real money</a> tables, and various other gaming options. This variety ensures you'll always find entertaining alternatives when you want a break from bingo.</p>
 <p>For sophisticated gaming experiences, our <a href="/live/categories/baccara">baccarat online casino</a> tables provide elegant entertainment options.</p>
 </section>
-
 <section>
 <h2>Bingo Casino Real Money Gaming Tips</h2>
-<p>[Lead-in sentence.]</p>
+<p>When you play bingo for real money, consider these helpful tips to enhance your bingo experience:</p>
 <ul>
-<li>[Tip 1]</li>
-<li>[Tip 2]</li>
-<li>[Tip 3]</li>
-<li>[Tip 4]</li>
-<li>[Tip 5]</li>
+<li>Start with smaller ticket price games to understand the format</li>
+<li>Take advantage of games to practice</li>
+<li>Participate in chat to learn from other players</li>
+<li>Manage your money responsibly with deposit limits</li>
+<li>Look for games with better prizes to winnings ratios</li>
 </ul>
 </section>
-
 <section>
 <h2>Bingo for Money Online Casino - Getting Started</h2>
-<p>[Onboarding steps summary based on source or generic.]</p>
-<p>[Closing value proposition sentence.]</p>
+<p>Joining our bingo for money online casino community is simple and straightforward. The registration process takes just minutes, and you can start exploring our free bingo games immediately. Once you're ready to play for real money, our promotional offers provide excellent starting value.</p>
+<p>The process to sign up involves just a few steps, and you'll quickly discover why our platform is the preferred choice for Australian players seeking quality bingo entertainment.</p>
 </section>
-
 <section>
 <h2>Responsible Gaming Features</h2>
-<p>[Responsible gaming tools from source or generic limits/reminders/self-exclusion.]</p>
+<p>We provide comprehensive responsible gaming tools to help players maintain control over their gaming activities. These include deposit limits, session time reminders, and self-exclusion options. Playing online should always remain fun and within your means.</p>
 </section>
-
 <section>
 <h2>Online Bingo Promotions and Loyalty Rewards</h2>
-<p>[Ongoing rewards, events, tournaments—map from source or generic.]</p>
-<p>[Optional concrete examples if present in source; otherwise a generic sentence.]</p>
+<p>Our online bingo promotions extend beyond the welcome bonus to include ongoing rewards for loyal players. Regular tournaments, seasonal events, and special promotions ensure there's always something exciting happening at our casino.</p>
+<p>Members can participate in provider tournaments like "Chasing the Gods" with 654,500 AUD prize pool and "Golden Sands" featuring 162,000 AUD in prizes. These events add extra excitement to regular gameplay.</p>
 </section>
-
 <section>
 <h2>Understanding Wagering Requirements</h2>
-<p>[Short, transparent explanation based on source or generic.]</p>
+<p>Each bonus has fair wagering requirements explained before claiming it. We are committed to being upfront, so we make all the bonus terms and conditions clear. If you know not to go for them, you won&rsquo;t spend impulsively!</p>
 </section>
-
 <section>
 <h2>FAQ</h2>
 <h3>What bingo games are available at Lucky Hills?</h3>
-<p>[Answer based on source or generic.]</p>
+<p>We offer various bingo games including Mayan Riches Bingo, Wild Bingo, Extra Bingo, and several keno variants like Across Universe Keno and Amaterasu Keno. All games are provided by reputable developers and offer real money prizes.</p>
 <h3>What is the minimum deposit required?</h3>
-<p>[Answer based on source or generic.]</p>
+<p>The minimum deposit at Lucky Hills is 30 AUD, which qualifies you for our welcome bonus package including 100% match bonus and 100 free spins on your first deposit.</p>
 <h3>Are the bingo games available on mobile devices?</h3>
-<p>[Answer based on source or generic.]</p>
+<p>Absolutely! All our bingo games are fully optimised for mobile play, allowing you to enjoy the same quality bingo experience on smartphones and tablets as on desktop computers.</p>
 <h3>What bonuses are available for bingo players?</h3>
-<p>[Answer based on source or generic.]</p>
+<p>We offer a comprehensive welcome bonus package, weekly cashback up to 5%, Wednesday free spins, Sunday gifts, and regular provider tournaments with substantial prize pools exceeding 650,000 AUD.</p>
 </section>
-
 """
 
 
