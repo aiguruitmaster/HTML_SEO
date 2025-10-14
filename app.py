@@ -34,60 +34,256 @@ HTML_PROMPT: str = r"""You are a rigorous HTML transformer. Output ONLY one HTML
 """
 
 # 2) Админка #2 (WinSpirit / LuckyHills)
-HTML_PROMPT_WS_LH: str = r"""HTML_PROMPT_WS_LH = '''ЗАДАЧА:
-На основе SOURCE_TEXT сгенерируй HTML, который СТРОГО СОВПАДАЕТ по структуре, количеству и порядку тегов с ШАБЛОНОМ ниже.
-✅ Разрешено менять только текстовое содержимое внутри уже существующих тегов.
-❌ НЕЛЬЗЯ: добавлять/удалять теги, менять их порядок, добавлять атрибуты/классы/стили, менять ссылки/таблицы/строки/ячейки/списки/заголовки.
+# 2) Админка #2 (WinSpirit / LuckyHills) — ЖЁСТКИЙ конвертер, возвращает ровно заданный текст/HTML
+HTML_PROMPT_WS_LH: str = r"""You are a conversion engine. Given ANY input text, your ONLY job is to output EXACTLY the HTML snippet shown below. 
 
-ВХОД:
+Hard rules:
+- IGNORE the meaning of the input.
+- RETURN the snippet EXACTLY as written (same words, punctuation, capitalization, HTML entities).
+- NO extra commentary, NO markdown fences, NO escaping, NO prefixes/suffixes.
+- Output must begin with the line "Meta Title: ..." and then "Meta Description: ...", followed by the HTML sections.
+- Do not personalize, summarize, or modify anything.
 
-SOURCE_TEXT: Тут должен быть текст который вставил юзер
+Input (to be ignored):
+Тут должен быть текст который вставил юзер
 
-ЯЗЫК ВЫВОДА:
+Output (return this EXACTLY, unchanged):
 
-Определи язык SOURCE_TEXT и используй ИМЕННО ЕГО для всего текстового содержимого в итоговом HTML.
+Meta Title: Casino Bingo Online Australia - Lucky Hills Bingo Games Real Money
+Meta Description: Play casino bingo online at Lucky Hills Australia. Enjoy bingo games, free bingo, mobile bingo with real money prizes. Join our bingo rooms today!
+<h1>Casino Bingo Online at Lucky Hills Australia</h1>
+<p>Welcome to Lucky Hills, where we bring you the ultimate casino bingo online experience for Australian players. At our casino Lucky Hills, we provide an exceptional collection of games that combine traditional fun with modern online gaming technology. Our platform offers players in Australia the perfect place to enjoy bingo and casino entertainment from the comfort of their own home.</p>
+<section>
+<h2>Online Bingo Experience at Our Casino</h2>
+<p>We pride ourselves on offering an extensive range of online bingo games that cater to every player's preferences. Our bingo casino features titles from top-tier providers including Mascot Gaming, Betsoft, VoltEnt, Platipus, and Bgaming. Each game delivers authentic experience with modern twists and exciting features.</p>
+<p>The variety of <a href="/">online casino for real money in Australia</a> gaming options makes Lucky Hills the perfect place for Australian players seeking quality entertainment.</p>
+<h3>Popular Bingo Games</h3>
+<p>Our collection includes various bingo games that guarantee hours of entertainment and chances to win real money. Here are some of our most popular titles that you can discover:</p>
+<ul>
+<li>Mayan Riches Bingo - Ancient treasures meet modern bingo fun</li>
+<li>Wild Bingo - Classic bingo with wild multipliers</li>
+<li>Extra Bingo - Enhanced gameplay with bonus features</li>
+<li>Across Universe Keno - Space-themed keno adventure</li>
+<li>Amaterasu Keno - Japanese-inspired keno experience</li>
+<li>Plinko XY - Exciting ball-drop variant</li>
+<li>Olympus Plinko - Mythological plinko adventure</li>
+</ul>
+</section>
+<section>
+<h2>Bingo Rooms and Gaming Environment</h2>
+<p>Within our online bingo rooms, you are able to enjoy a wide array of variations. Every bingo room has something for you whether it&rsquo;s about ticket prices, prize money or playing style, you choose. When enough players join the game, it recreates a community at large.</p>
+<p>For those who enjoy table games, our <a href="/live/categories/roulette">online roulette in Australia</a> section provides additional excitement between sessions.</p>
+<h3>Ball Bingo Variations</h3>
+<p>We offer several ball bingo variations to keep the excitement fresh and ensure you never miss out on winning opportunities:</p>
+<ul>
+<li>90-Ball Bingo - Traditional format with one line, two lines, and full house prizes</li>
+<li>75-Ball Bingo - American-style with certain pattern completions</li>
+<li>30-Ball Bingo - Fast-paced mini for quick wins</li>
+</ul>
+<p>Each variation offers unique winning combinations and progressive jackpot opportunities that can result in substantial winnings.</p>
+<h3>Bingo Cards and Bingo Tickets</h3>
+<p>Our bingo tickets feature clear, easy-to-read bingo cards with automatically marked numbers. When the game starts, numbers are called automatically, and your cards are marked instantly. This system ensures you never miss a winning ticket or certain pattern completion.</p>
+<p>Players can purchase multiple bingo tickets to increase their chances of winning, with each ticket offering the same chance of success. The ticket price varies depending on the game and potential prizes available.</p>
+</section>
+<section>
+<h2>Mobile Bingo Games</h2>
+<p>Australian players can enjoy our mobile bingo games on any device, anywhere. Our mobile platform provides the same quality experience as desktop gaming, with optimised interfaces for smartphones and tablets. Playing online has never been more convenient or accessible.</p>
+<p>The mobile experience includes access to our <a href="/casino/categories/slots">online pokies for real money</a> collection, providing variety when you want a break from bingo.</p>
+</section>
+<section>
+<h2>Welcome Bonus and Casino Bingo Promotions</h2>
+<p>We offer generous welcome bonus packages for new Australian players joining our bingo online casino. Our current promotional structure includes exciting opportunities to boost your bankroll and extend your gameplay with additional cash and free spins.</p>
+<h3>Welcome Bonus Package</h3>
+<p>Our welcome bonus structure provides excellent value for new players looking to play bingo online:</p>
+<table>
+<tbody>
+<tr>
+<td>
+<p>Deposit</p>
+</td>
+<td>
+<p>Bonus</p>
+</td>
+<td>
+<p>Free Spins</p>
+</td>
+<td>
+<p>Minimum Deposit</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>First</p>
+</td>
+<td>
+<p>100% Match</p>
+</td>
+<td>
+<p>100 Free Spins</p>
+</td>
+<td>
+<p>30 AUD</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Second</p>
+</td>
+<td>
+<p>200% Match</p>
+</td>
+<td>
+<p>-</p>
+</td>
+<td>
+<p>30 AUD</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Bingo Bonus Casino Promotions</h3>
+<p>We regularly run casino bingo promotions to keep the excitement alive for our loyal players. These promotions include cashback offers, free tickets, and special tournaments with substantial prize pools featuring progressive jackpot elements.</p>
+<p>Current Promotions Include:</p>
+<ul>
+<li>No-deposit weekly cashback up to 5%</li>
+<li>Wednesday Free Spins - up to 50 free spins</li>
+<li>Sunday gifts with up to 30% bonus</li>
+<li>Provider tournaments with prize pools exceeding 650,000 AUD</li>
+</ul>
+<p>Our <a href="/promotions/casino">deposit bonus casino</a> section provides full details about all available offers and their wagering requirements.</p>
+</section>
+<section>
+<h2>Casino with Bingo - Progressive Jackpot Opportunities</h2>
+<p>Many of our games feature progressive jackpot elements that grow with each game played. These jackpots can reach substantial amounts, providing life-changing win potential for lucky players. Our <a href="/casino/categories/jackpot">progressive jackpot slots online</a> section also complements the bingo experience perfectly.</p>
+<p>The progressive jackpot system means that every bet contributes to growing prize pools, creating excitement and anticipation with each game. Winners can claim these substantial prizes when luck strikes.</p>
+</section>
+<section>
+<h2>Game Providers and Quality</h2>
+<p>We partner with established providers to ensure our games meet the highest standards. Our provider portfolio includes top developers who complete our gaming experience:</p>
+<table>
+<tbody>
+<tr>
+<td>
+<p>Provider</p>
+</td>
+<td>
+<p>Games Available</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Mascot Gaming</p>
+</td>
+<td>
+<p>87 games</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>NetGame</p>
+</td>
+<td>
+<p>114 games</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Playson</p>
+</td>
+<td>
+<p>58 games</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>VoltEnt</p>
+</td>
+<td>
+<p>253 games</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Fugaso</p>
+</td>
+<td>
+<p>60 games</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>Platipus</p>
+</td>
+<td>
+<p>144 games</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>And this is just the beginning of the list of providers on our platform. They make incredible pokies, live games, and much more.</p>
+<h3>Game Quality and Features</h3>
+<p>Each bingo game in our collection offers smooth gameplay, clear graphics, and fair random number generation. The games load quickly and run smoothly on all devices, ensuring consistent entertainment value and fun for every player.</p>
+</section>
+<section>
+<h2>Deposit and Banking Options</h2>
+<p>Australian players can easily fund their accounts using various secure deposit methods. Our minimum deposit requirement of 30 Australian dollars to receive the Welcome Bonus makes our games accessible to players with different budgets. The deposit process is straightforward and secure, allowing you to start playing within minutes.</p>
+<p>Card games enthusiasts can also explore our <a href="/live/categories/poker">online poker in Australia for real money</a> tables for additional gaming variety.</p>
+</section>
+<section>
+<h2>Online Bingo Casino Australia - Security and Licensing</h2>
+<p>Lucky Hills operates as a licensed online bingo casino Australia, ensuring all games meet international standards for fairness and security. Your personal information and financial transactions are protected using advanced encryption technology, giving you peace of mind while you play.</p>
+</section>
+<section>
+<h2>Classic Bingo and Traditional Formats</h2>
+<p>For players who prefer traditional gameplay, our classic bingo selection offers authentic experiences that capture the essence of traditional bingo halls. These games feature familiar rules and straightforward gameplay that appeals to both newcomers and experienced players.</p>
+</section>
+<section>
+<h2>Additional Gaming Options Beyond Bingo Online</h2>
+<p>Beyond bingo online, our casino offers complementary gaming experiences. Players enjoy slots collections, <a href="/live">live casino online for real money</a> tables, and various other gaming options. This variety ensures you'll always find entertaining alternatives when you want a break from bingo.</p>
+<p>For sophisticated gaming experiences, our <a href="/live/categories/baccara">baccarat online casino</a> tables provide elegant entertainment options.</p>
+</section>
+<section>
+<h2>Bingo Casino Real Money Gaming Tips</h2>
+<p>When you play bingo for real money, consider these helpful tips to enhance your bingo experience:</p>
+<ul>
+<li>Start with smaller ticket price games to understand the format</li>
+<li>Take advantage of games to practice</li>
+<li>Participate in chat to learn from other players</li>
+<li>Manage your money responsibly with deposit limits</li>
+<li>Look for games with better prizes to winnings ratios</li>
+</ul>
+</section>
+<section>
+<h2>Bingo for Money Online Casino - Getting Started</h2>
+<p>Joining our bingo for money online casino community is simple and straightforward. The registration process takes just minutes, and you can start exploring our free bingo games immediately. Once you're ready to play for real money, our promotional offers provide excellent starting value.</p>
+<p>The process to sign up involves just a few steps, and you'll quickly discover why our platform is the preferred choice for Australian players seeking quality bingo entertainment.</p>
+</section>
+<section>
+<h2>Responsible Gaming Features</h2>
+<p>We provide comprehensive responsible gaming tools to help players maintain control over their gaming activities. These include deposit limits, session time reminders, and self-exclusion options. Playing online should always remain fun and within your means.</p>
+</section>
+<section>
+<h2>Online Bingo Promotions and Loyalty Rewards</h2>
+<p>Our online bingo promotions extend beyond the welcome bonus to include ongoing rewards for loyal players. Regular tournaments, seasonal events, and special promotions ensure there's always something exciting happening at our casino.</p>
+<p>Members can participate in provider tournaments like "Chasing the Gods" with 654,500 AUD prize pool and "Golden Sands" featuring 162,000 AUD in prizes. These events add extra excitement to regular gameplay.</p>
+</section>
+<section>
+<h2>Understanding Wagering Requirements</h2>
+<p>Each bonus has fair wagering requirements explained before claiming it. We are committed to being upfront, so we make all the bonus terms and conditions clear. If you know not to go for them, you won&rsquo;t spend impulsively!</p>
+</section>
+<section>
+<h2>FAQ</h2>
+<h3>What bingo games are available at Lucky Hills?</h3>
+<p>We offer various bingo games including Mayan Riches Bingo, Wild Bingo, Extra Bingo, and several keno variants like Across Universe Keno and Amaterasu Keno. All games are provided by reputable developers and offer real money prizes.</p>
+<h3>What is the minimum deposit required?</h3>
+<p>The minimum deposit at Lucky Hills is 30 AUD, which qualifies you for our welcome bonus package including 100% match bonus and 100 free spins on your first deposit.</p>
+<h3>Are the bingo games available on mobile devices?</h3>
+<p>Absolutely! All our bingo games are fully optimised for mobile play, allowing you to enjoy the same quality bingo experience on smartphones and tablets as on desktop computers.</p>
+<h3>What bonuses are available for bingo players?</h3>
+<p>We offer a comprehensive welcome bonus package, weekly cashback up to 5%, Wednesday free spins, Sunday gifts, and regular provider tournaments with substantial prize pools exceeding 650,000 AUD.</p>
+</section>
+"""
 
-НИКОГДА не переводить язык: если SOURCE_TEXT на русском — вывод на русском; если на английском — вывод на английском; если на испанском — на испанском и т.д.
-
-HTML-сущности и плейсхолдеры остаются как в шаблоне и не зависят от языка.
-
-ДЕТЕКЦИЯ ДАННЫХ ИЗ SOURCE_TEXT:
-
-BRAND_NAME: извлеки основное название бренда/казино. Если не найдено — используй строку "TARGET_BRAND".
-
-LAST_UPDATED_DATE: если присутствует дата обновления — возьми её; иначе подставь ровно "June 06, {current_year}" (не менять формат и плейсхолдер).
-
-Цифры/факты (бонусы, провайдеры, платежи, лицензии и т.п.) подставляй в соответствующие места ШАБЛОНА, не меняя структуру. Если данных нет — оставь формулировки ШАБЛОНА (с заменой бренда).
-
-ТРЕБОВАНИЯ К СУЩНОСТЯМ/ЭКРАНИРОВАНИЮ:
-
-Сохраняй HTML-экранирование и спецсущности ИДЕНТИЧНО примеру:
-— — — длинное тире
-— “ ” — типографские кавычки
-— ’ — апостроф
-— проценты как 100{'%'}
-— 24/7 как 24{'/'}7
-
-Плейсхолдер {current_year} не подставлять конкретным годом.
-
-Не менять href в ссылках ШАБЛОНА.
-
-Количество строк/столбцов в таблицах и пунктов в списках — неизменно.
-
-Числа из SOURCE_TEXT можно подставлять только в уже существующие места (без добавления новых пунктов).
-
-ШАБЛОН (СТРУКТУРУ НЕ МЕНЯТЬ, ПЛЕЙСХОЛДЕРЫ НЕ ТРОГАТЬ):
-
-<h1>New Online Slots Australia - Play Premium Games at BRAND_NAME {current_year}</h1> <p>Last updated: LAST_UPDATED_DATE</p> <p>Experience the thrill of new slots in Australia has to offer at BRAND_NAME Casino, where cutting-edge gaming meets exceptional rewards. Our casino delivers the latest slot releases from industry-leading developers, ensuring Australian players access premium entertainment with every spin.</p> <p>Gambling online has become increasingly popular in Australia due to its convenience and accessibility. However, it's important to note that online gambling legal regulations, such as those outlined in the Interactive Gambling Act of 2001, govern how Australians can gamble online and which operators are permitted to offer services.</p> <p>While online casinos provide unmatched convenience&mdash;allowing you to play anytime and anywhere&mdash;they differ from a land-based casino, where instant cashouts and a vibrant social atmosphere are part of the experience. When you choose to gamble, especially with new slots in Australia, always do so responsibly and ensure you select secure, reputable platforms for your gambling activities.</p> <section> <h2>Introduction to Online Casinos in Australia</h2> <p>Online casinos in Australia have transformed the way Aussie players enjoy their favorite casino games, offering the excitement of real money gambling from the comfort of home. With the rapid growth of online gambling, players now have access to a vast selection of casino games, including online slots, table games, and live dealer experiences&mdash;all available at their fingertips. Whether you&rsquo;re a fan of spinning the reels or testing your skills at classic table games, online casinos in Australia provide endless opportunities to win real money and enjoy top-tier entertainment.</p> </section> <section> <h2>Why BRAND_NAME Leads Australian Online Casino Sites</h2> <p>The best online casinos in Australia feature extensive game libraries, from classic online pokies to the latest live dealer games, ensuring there&rsquo;s something for every type of player. Whether you&rsquo;re chasing big wins on progressive jackpot slots or enjoying the social atmosphere of live casino tables, online casino sites provide endless entertainment and winning opportunities. With so many options available, it&rsquo;s easy for players to find a trusted online casino that suits their style and preferences.</p> <p>At our casino BRAND_NAME, we&rsquo;ve established ourselves among the top online casinos serving Australian players. BRAND_NAME is recognised as one of the top-rated online casinos and best online casino sites for Australian players, offering a trusted and high-quality gaming experience. Operating under a Curacao gaming licence, we maintain the highest standards of security and fairness across our platform.</p> <p>Our commitment to excellence shows through our extensive collection of thousands of casino games, featuring the newest releases alongside established favorites. Many online casinos compete for the title of best Aussie casinos, but our casino BRAND_NAME distinguishes itself through superior game selection, generous bonuses, and unwavering dedication to player satisfaction.</p> <p>The Australian online casino market demands innovation, and we deliver through partnerships with premium software providers. Our platform operates on advanced SSL encryption technology, ensuring every gaming session remains secure and protected.</p> </section> <section> <h2>Getting Started at BRAND_NAME Casino</h2> <p>Joining BRAND_NAME Casino is a breeze, making it simple for new players to dive into the world of online gaming. Creating your casino account takes just a few minutes, and once registered, you&rsquo;ll unlock access to a vast selection of games, exclusive bonuses, and rewarding promotions. Whether you&rsquo;re a fan of online pokies, classic table games, or live dealer games, BRAND_NAME Casino has something for every Aussie player.</p> <p>As a new member, you&rsquo;ll be greeted with a generous welcome bonus to boost your bankroll right from the start. Plus, ongoing loyalty rewards and regular promotions ensure there&rsquo;s always something extra to look forward to. With a user-friendly interface and dedicated customer support, BRAND_NAME Casino makes it easy for Aussie players to enjoy a seamless and secure gaming experience from day one.</p> <h3>Creating Your Casino Account</h3> <p>Getting started at the <a href="/">real online casino Australia</a> BRAND_NAME is quick and straightforward. Here&rsquo;s how you can create your casino account and start playing:</p> <ol> <li>Visit the BRAND_NAME Casino website and click the &ldquo;Sign Up&rdquo; button.</li> <li>Complete the registration form with your personal details, such as your name, email address, and a secure password.</li> <li>Select your preferred currency and payment method to suit your needs.</li> <li>Confirm your registration by clicking the verification link sent to your email.</li> <li>Log in to your new casino account and make your first deposit to unlock your welcome bonus.</li> </ol> <p>Once your account is set up, you&rsquo;ll have instant access to a wide variety of online pokies, live dealer games, and classic table games. Take advantage of generous bonuses, including a welcome bonus and ongoing loyalty rewards, to maximise your gaming experience. With a smooth registration process and excellent customer support, BRAND_NAME Casino ensures Aussie players can start enjoying top-quality online casino entertainment in no time.</p> </section> <section> <h2>Discover Australia's Premier New Online Slots Collection</h2> <p>New slots players demand combine innovative mechanics with engaging themes. Our casino BRAND_NAME curates an exceptional selection of recent releases, each carefully vetted for quality and entertainment value. The new collection features a variety of online pokies offer, including both traditional and progressive jackpots, giving players more options for big wins.</p> <p>Many of the latest releases also include bonus buy games, allowing players to purchase bonus rounds directly and enhance their gameplay.</p> <p>Players can also participate in exciting casino tournaments featuring new slots for additional rewards.</p> <h3>Featured New Releases for {current_year}</h3> <p>Whether you prefer to <a href="/casino/categories/slots">play online pokies real money</a> or modern jackpot slots, these new titles bring exciting opportunities to win real money at trusted Australian casino online sites. Explore our constantly updated collection and experience the thrill of discovering top-quality online games.</p> <ul> <li>Big Max Multi Reel by Swintt. This classic five-reel slot delivers nostalgic fruit machine vibes with modern features. The 95{'%'} RTP and medium-high volatility create balanced gameplay, while the 5,000x maximum win potential keeps excitement levels high. The multiplier system on the fifth reel adds strategic depth to each spin.</li> <li>Jack Potter in Vegas by OnlyPlay. Combining classic fruit symbols with Vegas glamour, this 3x3 grid slot offers 95.42{'%'} RTP and high volatility action. The wild symbol doubles payouts, while three scatters unlock 20 free spins. Five progressive jackpots provide opportunities for massive wins up to 10,000x your stake.</li> <li>Piggy Power by Playson. It's among <a href="/casino/providers/playson_">Playson casino best pokies</a> features 25 paylines across a 5x3 grid. With 96.48{'%'} RTP and high volatility, the Free Spins feature becomes the highlight, utilising expanding symbols and multiplier mechanics for substantial rewards up to 5,000x your stake.</li> </ul> <p>Australian players seeking diverse gaming experiences will find our new slots collection perfectly balanced between classic appeal and modern innovation.</p> </section> <section> <h2>Premium Software Providers Behind Our Online Casino Games</h2> <p>Our casino BRAND_NAME partners exclusively with licensed, reputable developers who create world-class online games. Some of these providers are regulated by respected authorities such as the Malta Gaming Authority, ensuring fairness and security for all players.</p> <p>Each provider brings unique strengths to our platform, offering a wide range of casino game types to ensure variety and quality across our entire collection.</p> <table> <tbody> <tr> <td> <p>Provider</p> </td> <td> <p>Established</p> </td> <td> <p>Key Features</p> </td> <td> <p>Popular Titles</p> </td> </tr> <tr> <td> <p>Playson</p> </td> <td> <p>2015</p> </td> <td> <p>Megaways, Buy Feature, Free Spins</p> </td> <td> <p>Pink Joker, Jingle Coins</p> </td> </tr> <tr> <td> <p>BGaming</p> </td> <td> <p>2012</p> </td> <td> <p>Cluster Pays, Bonus Buy, High RTP</p> </td> <td> <p>Aztec Clusters, Pop Zen</p> </td> </tr> <tr> <td> <p>VolTent</p> </td> <td> <p>2010</p> </td> <td> <p>Variable Volatility, Hold the Jackpot</p> </td> <td> <p>Magic Spins, 16 Coins</p> </td> </tr> <tr> <td> <p>Booongo</p> </td> <td> <p>2015</p> </td> <td> <p>Hold and Win, Mystery Symbols</p> </td> <td> <p>Sun of Egypt 4, Crystal Scarabs</p> </td> </tr> <tr> <td> <p>BetSoft</p> </td> <td> <p>2006</p> </td> <td> <p>3D Graphics, Cinematic Experience</p> </td> <td> <p>RockStar, World Tour</p> </td> </tr> </tbody> </table> <p>These partnerships ensure our Australian online casino offers games meeting international standards while catering specifically to local preferences and regulations.</p> </section> <section> <h2>Best Online Casino Bonuses for Australian Players</h2> <p>Our casino BRAND_NAME provides industry-leading welcome bonus packages designed specifically for Australian players. Generous welcome bonuses and deposit bonuses are key incentives for new members, offering substantial value from their very first deposit and maximising their potential for winning real money.</p> <p>First Deposit Bonus:</p> <ul> <li>100{'%'} match bonus (up to &euro;200)</li> <li>100 free spins on selected slots</li> <li>Minimum deposit: &euro;20.</li> </ul> <p>Second Deposit Bonus:</p> <ul> <li>200{'%'} match bonus (up to &euro;200)</li> <li>Minimum deposit: &euro;40.</li> </ul> <p>Free spins are distributed over five days in batches of 20 spins daily, allowing extended gameplay across multiple sessions. Wagering requirements stand at 40x for both bonus funds and free spin winnings, aligning with industry standards while remaining achievable.</p> <h3>Ongoing Promotions for Regular Players</h3> <p>There are also the following bonuses available now:</p> <ul> <li>Weekly Cashback Program: Up to 5{'%'} cashback on weekly activity, providing safety net protection for regular players. This reload bonus system ensures continued value regardless of gaming outcomes.</li> <li>Wednesday Free Spins: Receive up to 50 free spins based on deposit amount, with spin values reaching A$0.80 for premium players.</li> <li>Sunday Gifts: Bonus funds up to 30{'%'} on Sunday deposits, creating consistent opportunities for enhanced gameplay.</li> </ul> <p>Our bonus structure reflects understanding of players' preferences, combining immediate value with long-term benefits across multiple gaming sessions.</p> </section> <section> <h2>Wagering Requirements and Bonus Terms</h2> <p>Understanding bonus terms ensures Australian players maximise promotional value while meeting necessary requirements. Some promotions may require deposit bonus codes to activate special offers. Our casino BRAND_NAME maintains transparent, fair wagering requirements across all promotional offers.</p> <h3>Standard Wagering Requirements</h3> <p>The requirements on our website are as follows:</p> <ul> <li>Welcome Bonus: 40x bonus amount</li> <li>Free Spins: 40x winnings from free spins</li> <li>Reload Bonus: 35x bonus amount</li> <li>Cashback: 1x cashback amount (withdrawal ready).</li> </ul> <h3>Game Contribution Rates</h3> <p>Different games contribute varying percentages toward wagering requirements:</p> <table> <tbody> <tr> <td> <p>Game Type</p> </td> <td> <p>Contribution Rate</p> </td> </tr> <tr> <td> <p>Online Slots</p> </td> <td> <p>100{'%'}</p> </td> </tr> <tr> <td> <p>Table Games</p> </td> <td> <p>10{'%'}</p> </td> </tr> <tr> <td> <p>Live Dealer Games</p> </td> <td> <p>10{'%'}</p> </td> </tr> <tr> <td> <p>Video Poker</p> </td> <td> <p>25{'%'}</p> </td> </tr> </tbody> </table> <h3>Time Limits and Restrictions</h3> <p>Bonus funds and free spin winnings expire after 30 days if wagering requirements remain incomplete. Game restrictions may apply to certain high RTP slots during bonus play.</p> <p>Our transparent bonus terms ensure players understand requirements before claiming promotions, preventing misunderstandings and ensuring positive gaming experiences.</p> </section> <section> <h2>Essential Game Categories at BRAND_NAME</h2> <p>Players seeking variety will discover our comprehensive game categorisation system, designed to help locate preferred gaming styles quickly. BRAND_NAME as one of the top Australian casino sites and Aussie online casinos offers a wide variety of games to suit every player. Each category contains carefully curated selections of the best slot machines for players from Australia.</p> <h3>Low-Risk Gaming Options</h3> <p>Conservative players appreciate low volatility <a href="/casino/providers/betsoft">Betsoft pokies Australia</a> that provide frequent, smaller wins. These games offer extended gameplay sessions with reduced bankroll fluctuation, perfect for entertainment-focused players.</p> <p>Low volatility slots in Australia typically feature RTPs between 95-97{'%'}, ensuring fair returns while maintaining steady payout frequency. The best Australian online casinos and Australian casinos are known for their extensive game selections and innovative features and our collection includes titles from established providers known for balanced mathematics and engaging themes.</p> <h3>High-Stakes Gaming Features</h3> <p>For players seeking maximum potential rewards, our <a href="/casino/providers/1spin4win">1spin4win casino slots online</a> offer direct access to premium features. These games allow immediate trigger of bonus rounds, eliminating wait times while increasing winning potential.</p> <p>Bonus buy features typically cost 50-100x the base stake but provide guaranteed access to free spins, multipliers, or progressive features. This option appeals to experienced players comfortable with higher-risk, higher-reward gameplay.</p> <h3>Progressive Jackpot Excellence</h3> <p>Our top jackpot slots in {current_year} for Aussies deliver life-changing winning potential through connected progressive networks. These games accumulate portions of each bet into massive prize pools, creating opportunities for extraordinary payouts.</p> <p>Progressive jackpots often exceed A$1 million, with some networks reaching multi-million dollar levels. Regular contributions from players across multiple casinos online ensure rapid prize pool growth.</p> <h3>Trending Gaming Options</h3> <p>Stay current with play hot slots Au in {current_year}, featuring the most popular titles among Australian players. These games represent current market favorites, combining proven mechanics with contemporary themes.</p> <p>Hot slots typically feature recently released titles showing strong player adoption rates. Our tracking systems identify trending games based on play frequency, session duration, and player feedback.</p> <h3>Innovative Slot Mechanics</h3> <p>Experience next-generation gaming through play Megaways slots for real money, where dynamic reel systems create thousands of potential winning combinations. These slots revolutionise traditional payline structures through variable symbol arrangements.</p> <p>Megaways mechanics can generate up to 117,649 ways to win on a single spin, dramatically increasing excitement and winning potential. Licensed through Big Time Gaming, these slots represent cutting-edge innovation in online games.</p> </section> <section> <h2>Mobile Gaming Excellence for Australian Players</h2> <p>Our casino BRAND_NAME recognises that mobile casinos dominate modern gaming preferences. Australian players demand seamless mobile experiences, and our platform delivers through comprehensive optimisation across all devices. In addition to mobile-friendly websites, dedicated casino apps are available, offering quick access, enhanced security, and exclusive mobile-only bonuses to further improve the mobile gambling experience.</p> <h3>Native App Features</h3> <p>Download our dedicated PWA mobile app for enhanced functionality:</p> <ul> <li>Instant game loading</li> <li>Push notifications for bonuses</li> <li>Biometric login security</li> <li>Offline account management</li> <li>Exclusive mobile promotions.</li> </ul> <h3>Browser-Based Gaming</h3> <p>Prefer instant access? Our mobile-optimised website provides full functionality through any modern browser:</p> <ul> <li>HTML5 technology ensures smooth performance</li> <li>No download requirements</li> <li>Identical game selection to desktop</li> <li>Secure payment processing</li> <li>Customer support integration.</li> </ul> <p>Mobile compatibility extends across our entire game library, ensuring Australian players never miss premium gaming opportunities regardless of location or device preference.</p> </section> <section> <h2>Payment Methods and Banking Security</h2> <p>Australian online casinos must provide secure, convenient banking options. Our casino BRAND_NAME offers comprehensive payment solutions designed specifically for Australians needs. Deposits and withdrawals can be made in Australian dollars, simplifying transactions for local players and helping to avoid currency conversion fees. BRAND_NAME provides real money gambling services in compliance with international regulations. Compared to other gambling sites, BRAND_NAME offers a comprehensive range of secure payment methods.</p> <table> <tbody> <tr> <td> <p>Method</p> </td> <td> <p>Minimum</p> </td> <td> <p>Maximum</p> </td> <td> <p>Processing Time</p> </td> </tr> <tr> <td> <p>Credit/Debit Cards</p> </td> <td> <p>A$20</p> </td> <td> <p>A$5,000</p> </td> <td> <p>Instant</p> </td> </tr> <tr> <td> <p>Bank Transfer</p> </td> <td> <p>A$30</p> </td> <td> <p>A$10,000</p> </td> <td> <p>1-3 business days</p> </td> </tr> <tr> <td> <p>E-wallets</p> </td> <td> <p>A$20</p> </td> <td> <p>A$3,000</p> </td> <td> <p>Instant</p> </td> </tr> <tr> <td> <p>Cryptocurrency</p> </td> <td> <p>A$50</p> </td> <td> <p>A$8,000</p> </td> <td> <p>10-30 minutes</p> </td> </tr> </tbody> </table> <h3>Withdrawal Procedures</h3> <p>Withdrawal processing maintains high security standards while ensuring reasonable timeframes:</p> <ul> <li>Document verification required for first withdrawal</li> <li>Processing times: 24-72 hours for most methods</li> <li>No fees for standard withdrawal methods</li> <li>Weekly withdrawal limits: A$10,000</li> <li>Monthly withdrawal limits: A$40,000.</li> </ul> <p>All financial transactions utilise 256-bit SSL encryption, meeting banking industry security standards. Our casino account verification process protects against fraud while maintaining user convenience.</p> </section> <section> <h2>Popular Casino Games Beyond Slots</h2> <p>While slots dominate our game library, our casino BRAND_NAME provides comprehensive gaming options across multiple categories. Australian players enjoy variety, and our platform delivers through carefully curated selections. Whether you are looking for an online casino in Australia, you will find a diverse range of games to suit every preference.</p> <h3>Live Dealer Games Excellence</h3> <p>Experience authentic casino atmosphere through live dealer games featuring professional dealers and high-definition streaming. Our live casino section includes:</p> <ul> <li>Live Roulette: European and American variants</li> <li>Live Blackjack: Multiple table limits and rule variations</li> <li>Live Baccarat: Traditional and speed variants</li> <li>Game Shows: Wheel of Fortune, Classic Wheel, Crash Live.</li> </ul> <p>Live dealer games operate 24{'/'}7, ensuring Australian players access professional gaming experiences regardless of local time zones.</p> <h3>Table Games Collection</h3> <p>Traditional casino enthusiasts appreciate our real money casino table games selection:</p> <ul> <li>Online Blackjack: Multiple variants with varying house edges</li> <li>Online Roulette: European, American, and French wheels</li> <li>Online Craps: Complete betting options with live dealer format</li> <li>Poker Games: Video poker variants and live dealer tables.</li> </ul> <p>Each game category maintains multiple variants, ensuring players find preferred rule sets and betting limits matching their comfort levels.</p> </section> <section> <h2>Responsible Gaming at Australian Online Casino Sites</h2> <p>Our casino BRAND_NAME prioritises responsible gaming practices, recognising that online gambling should remain entertaining rather than problematic. We implement comprehensive tools ensuring players maintain healthy gaming habits.</p> <p>Session Controls:</p> <ul> <li>Time limits for gaming sessions</li> <li>Loss limits per day/week/month</li> <li>Deposit limits with cooling-off periods</li> <li>Reality check notifications.</li> </ul> <p>Account Management:</p> <ul> <li>Self-exclusion options from 24 hours to permanent</li> <li>Account suspension for breaks</li> <li>Activity statements and spending reports.</li> </ul> <h3>Support Resources</h3> <p>We partner with recognised organisations supporting problem gambling prevention:</p> <ul> <li>Gambling Help Online: 24{'/'}7 support services</li> <li>Gamblers Anonymous Australia: Peer support networks</li> <li>Lifeline: Crisis support and counseling.</li> </ul> <p>Our customer support team receives training in recognising problem gambling signs and providing appropriate resource referrals when needed.</p> </section> <section> <h2>Understanding Return to Player (RTP) Rates</h2> <p>Australian players deserve transparency regarding game mathematics. Our casino BRAND_NAME provides detailed RTP information for all casino games, enabling informed gaming decisions.</p> <table> <tbody> <tr> <td> <p>Game Title</p> </td> <td> <p>RTP</p> </td> <td> <p>Developer</p> </td> <td> <p>Max Win</p> </td> </tr> <tr> <td> <p>Golden and Silver Horn</p> </td> <td> <p>98.00{'%'}</p> </td> <td> <p>KA Gaming</p> </td> <td> <p>5,000x</p> </td> </tr> <tr> <td> <p>Lion on Ridge</p> </td> <td> <p>98.00{'%'}</p> </td> <td> <p>KA Gaming</p> </td> <td> <p>8,000x</p> </td> </tr> <tr> <td> <p>Valentine Moncy</p> </td> <td> <p>97.33{'%'}</p> </td> <td> <p>Habanero</p> </td> <td> <p>10,000x</p> </td> </tr> <tr> <td> <p>Big Max Multi Reel</p> </td> <td> <p>97.01{'%'}</p> </td> <td> <p>Swintt</p> </td> <td> <p>5,000x</p> </td> </tr> <tr> <td> <p>Aztec Clusters</p> </td> <td> <p>97.00{'%'}</p> </td> <td> <p>BGaming</p> </td> <td> <p>10,000x</p> </td> </tr> </tbody> </table> <p>Higher RTP percentages indicate better long-term return expectations, though short-term results vary significantly due to volatility factors.</p> <h3>Volatility Considerations</h3> <p>Understanding volatility helps Australian players select appropriate games:</p> <p>Low Volatility:</p> <ul> <li>Frequent small wins</li> <li>Extended gameplay sessions</li> <li>Lower risk tolerance.</li> </ul> <p>Medium Volatility:</p> <ul> <li>Balanced win frequency and size</li> <li>Moderate risk levels</li> <li>Suitable for most players.</li> </ul> <p>High Volatility:</p> <ul> <li>Infrequent but larger wins</li> <li>Higher risk tolerance required</li> <li>Potential for significant payouts.</li> </ul> <p>Our game filters allow sorting by volatility level, helping players find games matching their risk preferences and bankroll management strategies.</p> </section> <section> <h2>Legal Framework for Online Casinos in Australia</h2> <p>Australian online casino operations must navigate complex regulatory environments. While the Interactive Gambling Act restricts certain online gambling services, offshore casinos like BRAND_NAME legally serve Australian players through international licensing. Australian players can legally access offshore sites and online gambling sites that are licensed internationally, as long as these online gambling sites do not specifically target or market to Australian residents.</p> <h3>Regulatory Compliance</h3> <p>Our Curacao gaming licence ensures:</p> <ul> <li>Regular auditing of random number generators</li> <li>Segregated player funds protection</li> <li>Anti-money laundering compliance</li> <li>Responsible gambling policy enforcement.</li> </ul> <h3>Player Rights and Protections</h3> <p>Australian players enjoy comprehensive protections:</p> <ul> <li>Dispute resolution procedures</li> <li>Fair gaming guarantees through third-party testing</li> <li>Data protection under international privacy standards</li> <li>Transparent terms and conditions.</li> </ul> <p>Legal online casinos operating offshore provide Australian players access to premium gaming experiences while maintaining regulatory compliance and player protection standards.</p> </section> <section> <h2>Customer Support Excellence</h2> <p>Australian players require accessible, knowledgeable support services. Our casino BRAND_NAME provides comprehensive customer support through multiple channels ensuring quick resolution of any concerns.</p> <h3>Support Channels</h3> <p>At BRAND_NAME Casino, Australian players have access to multiple convenient customer support channels to assist with any questions or issues:</p> <p>Live Chat:</p> <ul> <li>Available 24{'/'}7</li> <li>Average response time: Under 2 minutes</li> <li>Multilingual support available.</li> </ul> <p>Email Support:</p> <ul> <li>Detailed query resolution</li> <li>Response within 24 hours</li> <li>Document submission capabilities.</li> </ul> <p>FAQ Database:</p> <ul> <li>Comprehensive self-service options</li> <li>Searchable knowledge base</li> <li>Regular updates with new information.</li> </ul> <h3>Support Quality Standards</h3> <p>Our support team maintains high service standards:</p> <ul> <li>Extensive product knowledge training</li> <li>Problem-solving authority</li> <li>Escalation procedures for complex issues</li> <li>Regular customer satisfaction monitoring.</li> </ul> <p>Australian players receive priority support during local business hours, ensuring convenient access to assistance when needed.</p> </section> <section> <h2>Latest Industry Trends and Innovations</h2> <p>The Australian online casino market continues evolving through technological advancement and changing player preferences. The rise of instant casino platforms, known for their quick payouts, instant withdrawals, and seamless gaming experiences, is shaping the industry and attracting players seeking fast and reliable transactions. Early implementations of AR technology in slot games create immersive experiences blending virtual and physical environments. Cryptocurrency integration and provably fair games provide transparency and security appealing to tech-savvy players. Our casino BRAND_NAME stays ahead of trends ensuring our platform remains current and competitive.</p> <h3>Market Development Trends</h3> <p>Australian online casino sites increasingly focus on:</p> <ul> <li>Mobile-first gaming experiences</li> <li>Social gaming integration</li> <li>Cryptocurrency payment adoption</li> <li>Live dealer game expansion</li> <li>Localised content and promotions.</li> </ul> <p>Our platform adapts to these trends ensuring Australians access cutting-edge gaming technologies and features as they become available.</p> </section> <section> <h2>Frequently Asked Questions</h2> <h3>What makes BRAND_NAME different from other Australian online casino sites?</h3> <p>Our casino BRAND_NAME distinguishes itself through superior game selection, generous bonuses, and unwavering commitment to player satisfaction. Operating under strict Curacao licensing, we maintain highest security standards while providing access to thousands of premium casino games from industry-leading developers.</p> <h3>Are new online slots Australia players can access regularly updated?</h3> <p>Yes, we continuously update our new slots collection through partnerships with top-tier software providers. New releases appear weekly, ensuring Australian players always have access to the latest gaming innovations and themes.</p> <h3>How do I claim the welcome bonus at BRAND_NAME?</h3> <p>Simply create your casino account, complete the verification process, and make your first deposit of &euro;20 or more. The 100{'%'} match bonus plus 100 free spins activate automatically upon deposit confirmation, followed by a 200{'%'} bonus on your second deposit.</p> <h3>What payment methods work best for Australian players?</h3> <p>We support all major payment methods preferred by Australian players including credit/debit cards, bank transfers, e-wallets, and cryptocurrency options (Visa, Mastercard, InPay, MiFinity, eZeeWallet, Bank Transfer, Solana, Bitcoin, Ethereum, Bitcoin Cash, XRP, DAI). Most deposits process instantly, while withdrawals typically complete within 24-72 hours.</p> <h3>Can I play casino games on mobile devices?</h3> <p>Absolutely! Our casino BRAND_NAME provides full mobile compatibility through dedicated iOS and Android apps or mobile-optimised browser access. All games, bonuses, and account functions work seamlessly across all devices.</p> <h3>Are the games fair and regularly tested?</h3> <p>Yes, all our casino games undergo regular testing by independent auditing companies ensuring random number generator integrity and fair gaming outcomes. Our Curacao licence requires strict compliance with international gaming standards.</p> </section>
-
-ВЫВОД:
-
-Верни ТОЛЬКО итоговый HTML без комментариев/объяснений/Markdown.
-
-Структура и количество тегов должны полностью совпадать с ШАБЛОНОМ.
-
-Все сущности и плейсхолдеры ({current_year}, 100{'%'}, 24{'/'}7 и т.п.) оставить в точности.
-'''"""
 
 # 3) Админка #3 (Zoome)
 HTML_PROMPT_ZOOME: str = r"""HTML_PROMPT_ZOOME = '''Ты — конвертер текста в фиксированный HTML-шаблон.
