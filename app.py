@@ -64,7 +64,7 @@ MAPPING RULES (derive from the input)
 - FAQ: populate answers with facts from the source; if missing, keep answers generic and accurate.
 
 INPUT (to be transformed)
-{SOURCE_TEXT}
+{Тут должен быть текст который вставил юзер}
 
 OUTPUT (produce EXACTLY this structure with content rewritten from the input; keep every heading/link/table layout unchanged; write inside the tags):
 Meta Title: Casino Bingo Online Australia - Lucky Hills Bingo Games Real Money
