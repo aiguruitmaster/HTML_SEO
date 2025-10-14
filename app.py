@@ -34,30 +34,63 @@ HTML_PROMPT: str = r"""You are a rigorous HTML transformer. Output ONLY one HTML
 """
 
 # 2) Админка #2 (WinSpirit / LuckyHills) — ЖЁСТКИЙ конвертер, возвращает ровно заданный текст/HTML
-HTML_PROMPT_WS_LH: str = r"""You are a rigorous SEO HTML transformer.
+HTML_PROMPT_WS_LH: str = rSEO_HTML_PROMPT_V4: str = r"""
+You are a rigorous SEO HTML transformer.
 
 OUTPUT FORMAT (strict):
-1) Line 1: Meta Title: <title generated from RAW CONTENT (max ~70 chars)>
-2) Line 2: Meta Description: <description from RAW CONTENT (140–160 chars)>
+1) Line 1: Meta Title: <title from RAW CONTENT (≤70 chars; if RAW has "Title:", reuse verbatim)>
+2) Line 2: Meta Description: <description (140–160 chars; if RAW has "Description:", reuse verbatim)>
 3) Immediately after line 2: ONE (1) HTML block ONLY. No other text before/after. No code fences. No explanations.
 
-HARD RULES:
-- Keep the TARGET HTML TEMPLATE structure 100% identical (same tags, nesting, order, attributes, and counts).
-- Replace ONLY inner visible text nodes using information from RAW CONTENT. Do not add, remove, or reorder elements.
-- Keep ALL <a> href attributes unchanged and keep EXACTLY 8 <a> tags in the same positions as in the template.
-- Keep EXACTLY 2 <table> elements with row counts [3, 6] respectively; do not add/remove <tr> or <td>.
-- Keep the number and order of <section>, <h1>, <h2>, <h3>, <ul>/<li>, and <p> exactly as in the template.
-- Language: match the language of RAW CONTENT. If RAW CONTENT is mixed, use the majority language consistently across the whole output.
-- Do NOT invent facts, numbers, or entities; derive everything from RAW CONTENT. If a required cell/phrase has no support in RAW CONTENT, write a single dash "-" in that spot.
-- If text overflows, condense with commas/semicolons; keep concise, on-topic phrasing.
-- Do NOT escape characters from RAW CONTENT; keep visible text exactly as given (use straight quotes).
-- Preserve any HTML entities already present in the TARGET HTML TEMPLATE as-is.
-- Whitespace: do not add leading/trailing lines. The very first line must start with "Meta Title:" and the last character of the output must be the closing ">" of the last </section> tag.
-- Do not change capitalization of anchor texts unless required by RAW CONTENT meaning.
-- Never output placeholder labels like “RAW CONTENT” or “TARGET HTML TEMPLATE” in the final result.
+GLOBAL RULES:
+- Keep the TARGET HTML TEMPLATE structure 100% identical (same tags, nesting, order, attributes, and element counts).
+- Replace inner visible text nodes ONLY. Never add/remove/reorder elements.
+- Keep EXACTLY 8 <a> tags with their hrefs UNCHANGED and in the SAME positions as in the template.
+- Keep EXACTLY 2 <table> elements with TOTAL ROW COUNTS:
+  • Table #1 = 3 rows total (1 header + 2 data)
+  • Table #2 = 7 rows total (1 header + 6 data)
+- Keep the number and order of <section>, <h1>, <h2>, <h3>, <ul>/<li>, <p> exactly as in the template.
+- Language: match the MAJORITY language of RAW CONTENT consistently across the entire output.
+- No fabrication: if a required value is missing, insert a single dash "-" in that place.
+- If text is too long, condense with commas/semicolons; keep concise and on-topic.
+- Do NOT escape visible characters from RAW CONTENT; keep HTML entities as-is (e.g., &uuml; stays &uuml;).
+- Normalize brace-wrapped literals common in copied HTML: "{'%'}" → "%", "{'&'}" → "&".
+- Whitespace constraints: the very first line must start with "Meta Title:"; the last character of the whole output must be the closing ">" of the last </section> tag.
+
+META LINES:
+- If RAW begins with lines "Title:" and "Description:", copy their values verbatim into Meta Title / Meta Description.
+- Otherwise, synthesize both from RAW headlines/first paragraph ONLY (no inventions).
+
+ANCHORS:
+- You may change anchor INNER TEXTS using phrases supported by RAW CONTENT, but NEVER change their href attributes or positions. If no suitable text exists, use "-".
+
+HEADINGS & PARAGRAPHS:
+- Replace inner text of <h1>, <h2>, <h3>, <p>, <li> with concise content derived strictly from RAW CONTENT.
+- If a sentence/section can’t be supported, place "-" (single dash) as content.
+
+TABLE HANDLING (critical):
+- RAW CONTENT may include 0, 1, or multiple HTML tables with any shapes; treat them as data sources.
+- You must populate the TWO fixed TEMPLATE tables without altering their headers or structure.
+- Selection for TEMPLATE Table #1 (4 columns, 2 data rows):
+  • Prefer a source table listing “items” (e.g., slots/games/offers) with multiple attributes.
+  • If multiple candidate tables exist, pick the most specific/recent one by order of appearance.
+  • If NO source tables exist, derive rows from structured lists (<ul>/<ol>) or clearly itemized paragraphs.
+- Mapping for TEMPLATE Table #1 cells:
+  COL1 → compact main identifier (e.g., "<Item> – <Provider>" if both found; else the best available identifier)
+  COL2 → short numeric/grade fact if present (e.g., "RTP 96.0%"); otherwise a concise spec/label
+  COL3 → 1–2 key features joined by commas
+  COL4 → short constraint/price/minimum if present; otherwise "-"
+- Selection for TEMPLATE Table #2 (2 columns, 6 data rows):
+  • Build rows from provider-like entities (vendors/brands). If a numeric count appears near the name (e.g., "88 games"), place it in "Games Available"; otherwise, "-".
+  • If fewer than 6 providers are available, fill remaining rows with "-".
+- Truncation & padding:
+  • If a source table/list has more rows than needed, keep the first N by source order and drop the rest.
+  • If fewer than needed, pad remaining rows with "-".
+  • If a needed field is absent in a chosen row, write "-".
+- Clean cell text: strip inner tags; join multiple source fragments with " – " or ", " as appropriate.
 
 [RAW CONTENT]
-<Тут вставь любой исходный текст пользователя. Можно много — промпт сам ужмёт и распределит смысл по разделам шаблона.>
+<Вставь сюда любой исходный текст/HTML пользователя. Можно длинный — трансформер сам извлечёт факты, ужмёт таблицы и распределит контент по разделам шаблона.>
 
 [TARGET HTML TEMPLATE]
 Meta Title: Casino Bingo Online Australia - Lucky Hills Bingo Games Real Money
@@ -82,7 +115,7 @@ Meta Description: Play casino bingo online at Lucky Hills Australia. Enjoy bingo
 </section>
 <section>
 <h2>Bingo Rooms and Gaming Environment</h2>
-<p>Within our online bingo rooms, you are able to enjoy a wide array of variations. Every bingo room has something for you whether it&rsquo;s about ticket prices, prize money or playing style, you choose. When enough players join the game, it recreates a community at large.</p>
+<p>Within our online bingo rooms, you are able to enjoy a wide array of variations. Every bingo room has something for you whether it’s about ticket prices, prize money or playing style, you choose. When enough players join the game, it recreates a community at large.</p>
 <p>For those who enjoy table games, our <a href="/live/categories/roulette">online roulette in Australia</a> section provides additional excitement between sessions.</p>
 <h3>Ball Bingo Variations</h3>
 <p>We offer several ball bingo variations to keep the excitement fresh and ensure you never miss out on winning opportunities:</p>
@@ -109,46 +142,22 @@ Meta Description: Play casino bingo online at Lucky Hills Australia. Enjoy bingo
 <table>
 <tbody>
 <tr>
-<td>
-<p>Deposit</p>
-</td>
-<td>
-<p>Bonus</p>
-</td>
-<td>
-<p>Free Spins</p>
-</td>
-<td>
-<p>Minimum Deposit</p>
-</td>
+<td><p>Deposit</p></td>
+<td><p>Bonus</p></td>
+<td><p>Free Spins</p></td>
+<td><p>Minimum Deposit</p></td>
 </tr>
 <tr>
-<td>
-<p>First</p>
-</td>
-<td>
-<p>100% Match</p>
-</td>
-<td>
-<p>100 Free Spins</p>
-</td>
-<td>
-<p>30 AUD</p>
-</td>
+<td><p>First</p></td>
+<td><p>100% Match</p></td>
+<td><p>100 Free Spins</p></td>
+<td><p>30 AUD</p></td>
 </tr>
 <tr>
-<td>
-<p>Second</p>
-</td>
-<td>
-<p>200% Match</p>
-</td>
-<td>
-<p>-</p>
-</td>
-<td>
-<p>30 AUD</p>
-</td>
+<td><p>Second</p></td>
+<td><p>200% Match</p></td>
+<td><p>-</p></td>
+<td><p>30 AUD</p></td>
 </tr>
 </tbody>
 </table>
@@ -174,61 +183,15 @@ Meta Description: Play casino bingo online at Lucky Hills Australia. Enjoy bingo
 <table>
 <tbody>
 <tr>
-<td>
-<p>Provider</p>
-</td>
-<td>
-<p>Games Available</p>
-</td>
+<td><p>Provider</p></td>
+<td><p>Games Available</p></td>
 </tr>
-<tr>
-<td>
-<p>Mascot Gaming</p>
-</td>
-<td>
-<p>87 games</p>
-</td>
-</tr>
-<tr>
-<td>
-<p>NetGame</p>
-</td>
-<td>
-<p>114 games</p>
-</td>
-</tr>
-<tr>
-<td>
-<p>Playson</p>
-</td>
-<td>
-<p>58 games</p>
-</td>
-</tr>
-<tr>
-<td>
-<p>VoltEnt</p>
-</td>
-<td>
-<p>253 games</p>
-</td>
-</tr>
-<tr>
-<td>
-<p>Fugaso</p>
-</td>
-<td>
-<p>60 games</p>
-</td>
-</tr>
-<tr>
-<td>
-<p>Platipus</p>
-</td>
-<td>
-<p>144 games</p>
-</td>
-</tr>
+<tr><td><p>Mascot Gaming</p></td><td><p>87 games</p></td></tr>
+<tr><td><p>NetGame</p></td><td><p>114 games</p></td></tr>
+<tr><td><p>Playson</p></td><td><p>58 games</p></td></tr>
+<tr><td><p>VoltEnt</p></td><td><p>253 games</p></td></tr>
+<tr><td><p>Fugaso</p></td><td><p>60 games</p></td></tr>
+<tr><td><p>Platipus</p></td><td><p>144 games</p></td></tr>
 </tbody>
 </table>
 <p>And this is just the beginning of the list of providers on our platform. They make incredible pokies, live games, and much more.</p>
@@ -280,20 +243,10 @@ Meta Description: Play casino bingo online at Lucky Hills Australia. Enjoy bingo
 </section>
 <section>
 <h2>Understanding Wagering Requirements</h2>
-<p>Each bonus has fair wagering requirements explained before claiming it. We are committed to being upfront, so we make all the bonus terms and conditions clear. If you know not to go for them, you won&rsquo;t spend impulsively!</p>
-</section>
-<section>
-<h2>FAQ</h2>
-<h3>What bingo games are available at Lucky Hills?</h3>
-<p>We offer various bingo games including Mayan Riches Bingo, Wild Bingo, Extra Bingo, and several keno variants like Across Universe Keno and Amaterasu Keno. All games are provided by reputable developers and offer real money prizes.</p>
-<h3>What is the minimum deposit required?</h3>
-<p>The minimum deposit at Lucky Hills is 30 AUD, which qualifies you for our welcome bonus package including 100% match bonus and 100 free spins on your first deposit.</p>
-<h3>Are the bingo games available on mobile devices?</h3>
-<p>Absolutely! All our bingo games are fully optimised for mobile play, allowing you to enjoy the same quality bingo experience on smartphones and tablets as on desktop computers.</p>
-<h3>What bonuses are available for bingo players?</h3>
-<p>We offer a comprehensive welcome bonus package, weekly cashback up to 5%, Wednesday free spins, Sunday gifts, and regular provider tournaments with substantial prize pools exceeding 650,000 AUD.</p>
+<p>Each bonus has fair wagering requirements explained before claiming it. We are committed to being upfront, so we make all the bonus terms and conditions clear. If you know not to go for them, you won’t spend impulsively!</p>
 </section>
 """
+
 
 
 # 3) Админка #3 (Zoome)
